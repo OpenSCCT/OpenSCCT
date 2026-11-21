@@ -724,6 +724,8 @@ public sealed record ProfileData
 }
 
 /// <summary>A finished round on a trusted server, for stats and achievements.</summary>
+public sealed record PersonalRound(OpenScct.Net.Scoreboards.RoundScoreboard Board, int ParticipantId);
+
 public sealed record ResultsReport
 {
     /// <summary>The completed, server-authored scoreboard, independent of replay availability.</summary>

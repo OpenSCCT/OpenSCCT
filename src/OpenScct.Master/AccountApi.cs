@@ -87,6 +87,8 @@ internal sealed partial class AccountApi
             return WithAccountMutation(context, a => PutAppearance(a, request));
         });
         app.MapPost(MasterApi.ResultsPath, (HttpContext context, ResultsReport report) => PostResults(context, report));
+        app.MapPost(MasterApi.ResultsPath + "/personal", (HttpContext context, PersonalRound round) =>
+            WithAccountMutation(context, account => PostPersonalRound(account.Id, round)));
         app.MapGet(MasterApi.MatchHistoryPath, (HttpContext context, int? page) => WithAccount(context,
             a => Results.Json(_store.History(a.Id, page ?? 0), MasterApi.Json)));
         app.MapGet(MasterApi.MatchHistoryPath + "/{id:long}", (HttpContext context, long id) => WithAccount(context,
@@ -511,27 +513,12 @@ internal sealed partial class AccountApi
         return Results.Json(new ResultsResponse { MatchId = matchId, Equipment = equipment }, MasterApi.Json);
     }
 
-    /// <summary>A round with a winner and at least one signed-in player on each team.</summary>
     internal static bool Countable(ResultsReport report)
     {
-        if (report.WinningTeam is not (0 or 1))
-        {
-            return false;
-        }
-
-        bool spies = false, mercs = false;
-        foreach (ResultsReportRow row in report.Rows)
-        {
-            if (row.Bot || row.LeftEarly || row.AccountId is null)
-            {
-                continue;
-            }
-
-            spies |= row.Team == 0;
-            mercs |= row.Team == 1;
-        }
-
-        return spies && mercs;
+        var participants = report.Rows.Where(r => !r.LeftEarly && r.Team is 0 or 1).ToArray();
+        return report.WinningTeam is 0 or 1 && participants.Any(r => !r.Bot && r.AccountId.HasValue) &&
+            (report.Mode == 7 ? participants.Length >= 2 :
+                participants.Any(r => r.Team == 0) && participants.Any(r => r.Team == 1));
     }
 
     // ---- Pages -----------------------------------------------------------------------------------------------

@@ -176,6 +176,9 @@ public sealed class MasterClient : IDisposable
         }
     }
 
+    public Task<ResultsResponse> ReportPersonalRoundAsync(PersonalRound round) =>
+        SendAsync<ResultsResponse>(HttpMethod.Post, MasterApi.ResultsPath + "/personal", round, default);
+
     /// <summary>A trusted server asks where to upload a round's demo (needs <see cref="ServerKey"/>).</summary>
     public Task<DemoUploadResponse> RequestDemoUploadAsync(DemoUploadRequest request, CancellationToken cancellationToken = default) =>
         SendAsync<DemoUploadResponse>(HttpMethod.Post, MasterApi.DemoUploadPath, request, cancellationToken);

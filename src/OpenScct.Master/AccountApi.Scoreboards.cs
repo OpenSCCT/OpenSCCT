@@ -8,6 +8,32 @@ namespace OpenScct.Master;
 
 internal sealed partial class AccountApi
 {
+    private Microsoft.AspNetCore.Http.IResult PostPersonalRound(long account, PersonalRound round)
+    {
+        var board = round.Board;
+        if (board is not { Map.Length: <= 64, Rows.Count: >= 2 and <= 256 } ||
+            board.Rows.Any(p => p is null || p.Stats is null) ||
+            !board.Rows.Any(p => p.ParticipantId == round.ParticipantId && !p.Bot && !p.LeftEarly))
+            return Error(400, "Invalid participant or scoreboard.");
+
+        var report = new ResultsReport
+        {
+            ServerId = "community", Map = board.Map, Mode = board.Mode, Scoreboard = board,
+            WinningTeam = board.Winner, WinningReason = board.Reason,
+            ObjectivesTaken = board.ObjectivesTaken, ObjectivesNeeded = board.ObjectivesNeeded,
+            DurationSeconds = (int)Math.Clamp(board.ElapsedSeconds, 0, 86400),
+            Rows = board.Rows.Select(p => new ResultsReportRow
+            {
+                AccountId = p.ParticipantId == round.ParticipantId ? account : null,
+                Name = p.Name, Team = p.Team, Score = p.Score, Kills = p.Kills, Deaths = p.Deaths,
+                Bot = p.Bot, LeftEarly = p.LeftEarly, Feats = p.Stats!,
+            }).ToArray(),
+        };
+        if (!ValidScoreboard(report) || !Countable(report)) return Error(400, "Ineligible round.");
+        _store.ApplyResults(report, "Community game");
+        return Microsoft.AspNetCore.Http.Results.Json(new ResultsResponse(), MasterApi.Json);
+    }
+
     internal static bool ValidScoreboard(ResultsReport report)
     {
         if (report.Scoreboard is not { } board) return true; // Older trusted servers still report basic results.

@@ -272,7 +272,7 @@ public partial class ArmouryScreen : MenuPage
         if (account is null)
         {
             _content.AddChild(Note(AccountService.HasMaster
-                ? "Sign in on the Account page and earn achievements on official servers to unlock these. You can still try everything on."
+                ? "Sign in on the Account page and earn achievements in completed rounds against players or bots to unlock these. You can still try everything on."
                 : "Cosmetics are unlocked by achievements on an official master server; none is set up. You can still try everything on."));
         }
 

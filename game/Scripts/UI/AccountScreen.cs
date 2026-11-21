@@ -561,7 +561,7 @@ public partial class AccountScreen : MenuPage
             : string.Create(CultureInfo.InvariantCulture,
                 $"{rank.XpIntoLevel:N0} / {rank.XpForNext:N0} XP to level {rank.Level + 1}"), size: 16);
         CareerPanels.Text(rankPanel, "TotalXp", string.Create(CultureInfo.InvariantCulture, $"{progress.TotalXp:N0} lifetime XP"), dim: true, size: 14);
-        Label xpHelp = CareerPanels.Text(rankPanel, "XpHelp", "Earn XP through score, wins, objectives and achievements on official servers.", dim: true, size: 14);
+        Label xpHelp = CareerPanels.Text(rankPanel, "XpHelp", "Earn XP through score, wins, objectives and achievements in completed rounds against players or bots.", dim: true, size: 14);
         xpHelp.MouseFilter = MouseFilterEnum.Stop;
         xpHelp.TooltipText = string.Create(CultureInfo.InvariantCulture,
             $"{ProgressionK.ScoreXp} XP per score point · {ProgressionK.FinishXp} for finishing · {ProgressionK.WinXp} for winning · " +
