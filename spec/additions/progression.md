@@ -7,10 +7,10 @@ is a port: there is no `[PortOf]` and no provenance tag. The numbers are our own
 
 ## Rules
 
-1. **Who has a rank.** Only signed-in accounts on a master with levels (schema v5). Guests, bots, LAN and offline
-   play have none and show nothing.
-2. **Which rounds give XP.** The same rounds that count for achievements (docs/ONLINE.md, "Achievements"): reported
-   by a trusted server, with a winner and a signed-in player on each side. The master awards the XP in
+1. **Who has a rank.** Only signed-in accounts on a master with levels (schema v5). Guests and bots receive no awards.
+2. **Which rounds give XP.** Completed non-practice rounds with opponents and a winner count, including bot
+   games and player-hosted sessions. The signed-in client reports its own participant to the master. Official
+   hosts can also report the full match. Each account earns credit once per round. The master awards the XP in
    `AccountStore.ApplyResults`, after the achievements, so a round's new achievements add their XP to the same award.
 3. **A round's XP** (`Progression.ForRound`), per player row:
    - score: `ScoreXp` (10) per point of round score, the score clamped to 0..`MaxRoundScore` (100);

@@ -39,6 +39,56 @@ public sealed class ScoreboardHistoryTests
     }
 
     [Fact]
+    public async System.Threading.Tasks.Task Personal_bot_round_credits_only_the_signed_in_finisher()
+    {
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".db");
+        try
+        {
+            using var store = AccountStore.Open(path);
+            var account = store.GetOrCreate("local-finisher");
+            var options = MasterTests.LocalOptions();
+            options.Introducer = options.Relay = options.Probe = false;
+            options.Database = path;
+            options.TicketKeyFile = path + ".pem";
+            options.Discord.ClientId = "fixture-client";
+            options.Discord.ClientSecret = "fixture-secret";
+            await using var master = await MasterHost.StartAsync(options, cancellationToken: TestContext.Current.CancellationToken);
+            using var client = new MasterClient(master.HttpAddress);
+            var board = Report(new() { Team = 0, Name = "Player", Kills = 4 },
+                new() { Team = 1, Bot = true, Name = "Bot" }).Scoreboard!;
+            var round = new PersonalRound(board, 1);
+            await Assert.ThrowsAsync<MasterException>(() => client.ReportPersonalRoundAsync(round));
+            client.SessionToken = store.CreateSession(account.Id);
+            await Assert.ThrowsAsync<MasterException>(() => client.ReportPersonalRoundAsync(round with { ParticipantId = 2 }));
+            await Assert.ThrowsAsync<MasterException>(() => client.ReportPersonalRoundAsync(round with { Board = board with { Practice = true } }));
+            await client.ReportPersonalRoundAsync(round);
+            await client.ReportPersonalRoundAsync(round);
+            Assert.Equal(1, store.Progress(account.Id).Stats.Matches);
+            Assert.Equal(4, store.Progress(account.Id).Stats.Kills);
+            Assert.True(store.ProgressionOf(account.Id).Xp > 0);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            foreach (var suffix in new[] { "", "-wal", "-shm", ".pem" }) File.Delete(path + suffix);
+        }
+    }
+
+    [Fact]
+    public void A_signed_in_player_earns_bot_round_progress_once_across_personal_and_host_reports()
+    {
+        using var store = AccountStore.Open(":memory:");
+        var account = store.GetOrCreate("bot-round").Id;
+        var round = Report(new() { AccountId = account, Team = 0, Name = "Player", Kills = 4 },
+            new() { Team = 1, Name = "Opponent", Bot = true });
+        Assert.True(AccountApi.Countable(round));
+        store.ApplyResults(round, "Community game");
+        store.RecordReportedMatch(round, "Official game", counted: true);
+        Assert.Equal(1, store.Progress(account).Stats.Matches);
+        Assert.Equal(4, store.Progress(account).Stats.Kills);
+    }
+
+    [Fact]
     public void Completed_scoreboard_is_idempotent_and_departed_players_get_history_without_awards()
     {
         using var store = AccountStore.Open(":memory:");

@@ -11,6 +11,7 @@ internal sealed partial class AccountStore
 {
     private void MigrateScoreboards()
     {
+        Exec("CREATE TABLE IF NOT EXISTS career_round_awards (account_id INTEGER NOT NULL, round_id TEXT NOT NULL, PRIMARY KEY(account_id, round_id));");
         var matchColumns = Query("PRAGMA table_info(matches);", r => r.GetString(1));
         if (!matchColumns.Contains("round_id")) Exec("ALTER TABLE matches ADD COLUMN round_id TEXT;");
         if (!matchColumns.Contains("scoreboard")) Exec("ALTER TABLE matches ADD COLUMN scoreboard TEXT;");

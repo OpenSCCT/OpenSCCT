@@ -393,9 +393,11 @@ players only" on the Host page: no valid ticket, no entry. The listen host's own
 **trusted** server has a `serverKey` the master knows (`TrustedServers`). Only there:
 - admin tickets make the player a server admin (as `!login` does). The master's admins are Discord ids in its
   config (`Admins`).
-- finished rounds are reported (`POST /api/v1/results`) and count for stats and achievements. A round counts when
-  it ended normally with a signed-in person on each side. The answer carries the stored round's `matchId` (empty
-  from masters before demos), which the round's demo is uploaded under (see "Demos").
+- the host reports the full round to `POST /api/v1/results`. Its response includes the match ID for demo uploads.
+
+Signed-in clients can also send their own completed scoreboard to `POST /api/v1/results/personal` after a
+bot game or player-hosted match. Only the authenticated account receives career credit. Each account earns
+credit once per round even when the official host also reports it. Practice rounds and early departures earn no credit.
 
 **Achievements** (`src/OpenScct.Net/Cosmetics/Achievements.cs`, shared by the master and the game) come in six groups. Each one has progress (current and
 target) and unlocks cosmetics:

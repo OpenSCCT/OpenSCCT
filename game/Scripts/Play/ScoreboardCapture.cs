@@ -18,6 +18,7 @@ public sealed class ScoreboardCapture : IDisposable
     private RoundScoreboard? _last;
     private int _lastLocal = -1;
     private bool _disposed;
+    private string? _submittedRound;
 
     public ScoreboardCapture(ClientSession client)
     {
@@ -43,12 +44,27 @@ public sealed class ScoreboardCapture : IDisposable
             Partial = true, EndedUtc = DateTimeOffset.UtcNow,
             Rows = board.Rows.Select(r => r.ParticipantId == local ? r with { LeftEarly = true } : r).ToArray(),
         };
+        if (!left && board.Completed && !board.Practice && !board.Partial && board.Winner is 0 or 1 &&
+            board.Rows.Count(r => !r.LeftEarly) >= 2 && _submittedRound != board.RoundId &&
+            !AccountSettings.Isolated && _account > 0 && AccountSettings.Current.SignedIn &&
+            AccountSettings.Current.AccountId == _account && OnlineSettings.Current.MasterUrl == _master &&
+            (string.IsNullOrEmpty(board.Master) || ScoreboardArchive.NormaliseMaster(board.Master) == ScoreboardArchive.NormaliseMaster(_master)))
+        {
+            _submittedRound = board.RoundId;
+            _ = Submit(board, local);
+        }
         ScoreboardHistory.Save(new ArchivedScoreboard
         {
             Scoreboard = board, LocalParticipantId = local, Master = board.Master ?? "",
             AccountId = board.Master is { } master && ScoreboardArchive.NormaliseMaster(master) == ScoreboardArchive.NormaliseMaster(_master) ? _account : 0,
             PlayedLocally = true, LeftEarly = left,
         });
+    }
+
+    private static async System.Threading.Tasks.Task Submit(RoundScoreboard board, int local)
+    {
+        try { await AccountService.Call(c => c.ReportPersonalRoundAsync(new(board, local))); }
+        catch (OpenScct.Net.Discovery.MasterException e) { GD.PushWarning("Career progress: " + e.Message); }
     }
 
     public void Dispose()

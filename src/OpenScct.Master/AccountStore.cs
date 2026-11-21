@@ -759,6 +759,10 @@ internal sealed partial class AccountStore : IDisposable
                         continue;
                     }
 
+                    if (Guid.TryParse(report.Scoreboard?.RoundId, out var roundId) &&
+                        Exec("INSERT OR IGNORE INTO career_round_awards(account_id, round_id) VALUES ($a, $r);",
+                            ("$a", id), ("$r", roundId.ToString("N"))) == 0) continue;
+
                     bool won = row.Team == report.WinningTeam;
                     if (row.Team is 0 or 1)
                     {

@@ -65,7 +65,7 @@ and website Join links. See the [Linux guide](docs/LINUX.md) for dependencies an
 | Online and LAN | Browse servers, create a session or run a dedicated server. Configure lobby rules, loadouts and map rotations. [Joining and hosting](docs/ONLINE.md) |
 | Solo and practice | Fill slots with bots, explore through **Visit Map**, or use practice commands to spawn, place and control bots. [Bots and practice](docs/AI.md), [tutorials and controls](docs/MENUS.md) |
 | Social hub | Meet other players, use proximity voice, queue at match pads, or try the assault course and aim range. [In-game hub](docs/HUB.md), [voice chat](docs/VOICE.md) |
-| Player progression | Track career stats, ranks, XP, achievements and cosmetic unlocks. Eligible rounds on official servers count toward progression. [Player stats](docs/PLAYER-STATS.md) |
+| Player progression | Track career stats, ranks, XP, achievements and cosmetic unlocks. Signed-in players earn progression in completed rounds against bots or other players, including player-hosted sessions. [Player stats](docs/PLAYER-STATS.md) |
 | Replays and match history | Save demos, watch from player or free-camera views, and revisit permanent scoreboards. Playback needs a compatible build and matching map content. [Demos](docs/DEMOS.md), [scoreboards](docs/SCOREBOARD.md) |
 | Player website | Find servers, join through the launcher, view profiles and leaderboards, and manage account privacy. [Player hub](https://master.lumbridge.co.uk), [guide](docs/PLAYER-HUB.md) |
 | Map editor | Make and edit maps with [OpenSCCT Editor](https://github.com/OpenSCCT/OpenSCCT-Editor), available as an optional install from the Windows launcher's **Editor** tab. |

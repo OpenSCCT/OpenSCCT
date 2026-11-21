@@ -247,10 +247,10 @@ public partial class AchievementsScreen : MenuPage
         _overall.Visible = account is not null;
         _summary!.Text = account is null
             ? AccountService.HasMaster
-                ? "Sign in on the Account page to earn these on official servers. Each one unlocks cosmetics for the Armoury."
+                ? "Sign in on the Account page to earn these in completed rounds against players or bots. Each one unlocks cosmetics for the Armoury."
                 : "Achievements are earned on servers linked to an official master server; none is set up."
             : string.Create(CultureInfo.InvariantCulture,
-                $"{earned} of {Achievements.All.Count} earned. Only rounds on official servers with a signed-in player on each side count.");
+                $"{earned} of {Achievements.All.Count} earned. Completed rounds against players or bots count.");
 
         Achievement? first = null;
         foreach (IGrouping<AchievementCategory, Achievement> group in Achievements.All.GroupBy(a => a.Category))
