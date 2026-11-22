@@ -25,10 +25,10 @@ internal sealed partial class PlayerPortal
     private sealed record ProjectEdition(string Id, string Group, string Platform, string Name, string Scope, string Summary, string Requirement);
     private static readonly ProjectEdition[] Editions =
     [
-        new("ps2", "Originals", "PlayStation 2", "PS2 original", "Retail / disc", "Run the console release from your own disc image and follow the reconstruction of its executables.", "Your PS2 ISO"),
-        new("pc", "Originals", "Windows", "PC / Steam", "Retail / PC", "Play your installed copy of Chaos Theory. Keep the original game and choose community additions for Versus.", "Your PC installation"),
-        new("godot", "Modernisations", "Godot 4", "OpenSCCT Godot", "Windows / Linux", "Play Spies vs. Mercenaries in Godot with bots, replays and community maps. Build the original Versus maps from your Steam installation.", "Your Steam installation"),
-        new("unreal", "Modernisations", "Unreal Engine 5", "OpenSCCT Unreal", "Windows x64", "Play Spies vs. Mercenaries with Unreal lighting, materials and effects, using OpenSCCT’s shared simulation.", "Your Steam installation"),
+        new("ps2", "Reconstruction", "PlayStation 2", "PS2 original", "Retail / disc", "Run the console release from your own disc image and follow the reconstruction of its executables.", "Your PS2 ISO"),
+        new("pc", "Reconstruction", "Windows", "PC / Steam", "Retail / PC", "Play your installed copy of Chaos Theory. Keep the original game and choose community additions for Versus.", "Your PC installation"),
+        new("godot", "Game versions", "Godot 4", "OpenSCCT", "Windows / Linux", "Play Spies vs. Mercenaries in Godot with bots, replays and community maps. Build the original Versus maps from your Steam installation.", "Your Steam installation"),
+        new("unreal", "Game versions", "Unreal Engine 5", "OpenSCCT Unreal 5.8.4", "Windows x64", "Play Spies vs. Mercenaries with Unreal lighting, materials and effects, using OpenSCCT’s shared simulation.", "Your Steam installation"),
     ];
 
     private async Task<IResult> ProjectHome(HttpContext c)
@@ -49,30 +49,25 @@ internal sealed partial class PlayerPortal
               <div class="hero-inner"><div class="project-hero-copy">
                 <a class="hero-release" href="/changelog#game-latest"><span class="release-dot"></span>{H(releaseLabel)}<span class="release-date">{H(releaseDate)}</span><span aria-hidden="true">↗</span></a>
                 <h1 id="project-title">Chaos Theory<span>reconstructed.</span></h1>
-                <p class="hero-summary">Play the PlayStation 2 and PC originals. Rediscover Spies vs. Mercenaries in Godot and Unreal. Follow the work to rebuild the original code, byte for byte.</p>
+                <p class="hero-summary">Play Spies vs. Mercenaries in OpenSCCT or OpenSCCT Unreal 5.8.4. Follow the work to rebuild the original code, byte for byte.</p>
                 <div class="hub-actions"><a class="hub-primary" href="/download">{HubIcon("download")} Download the launcher</a><a class="hub-secondary" href="/progress">{HubIcon("progress")} See progress</a></div>
-                <p class="hero-requirement">Bring your own disc image or installed copy. <a href="/legal">How it works</a></p>
+                <p class="hero-requirement">Build game content from your installed Steam copy of Chaos Theory. <a href="/legal">How it works</a></p>
               </div>
-              <aside class="hero-stat" aria-label="Matching decompilation progress"><strong>{N(matched)} <small>bytes</small></strong><span>of original code verified</span><p>{Editions.Count(e => e.Group == "Originals")} originals · {Editions.Count(e => e.Group == "Modernisations")} modernisations</p></aside></div>
+              <aside class="hero-stat" aria-label="Matching decompilation progress"><strong>{N(matched)} <small>bytes</small></strong><span>of original code verified</span></aside></div>
             </section>
             <div class="directory-band"><div class="band-inner" id="editions">
               <header class="hub-heading"><div><p class="hub-eyebrow">Project directory</p><h2>Choose your edition</h2></div><a href="/progress">Full report and sources ↗</a></header>
             """);
-        foreach (var group in Editions.GroupBy(e => e.Group))
-        {
-            string id = group.Key.ToLowerInvariant();
-            string description = group.Key == "Originals" ? "The complete 2005 game on its original platforms." : "Spies vs. Mercenaries rebuilt with new engines, graphics and features.";
-            body.Append($"<section class=\"edition-group\" id=\"{id}\" aria-labelledby=\"{id}-heading\"><header><h3 id=\"{id}-heading\">{group.Key}</h3><p>{description}</p></header><div class=\"edition-library\">");
-            foreach (ProjectEdition edition in group) body.Append(LibraryCard(edition, progress));
-            body.Append("</div></section>");
-        }
+        body.Append("""<section class="edition-group" id="game-versions" aria-labelledby="game-versions-heading"><header><h3 id="game-versions-heading">Game versions</h3><p>Choose a version of Spies vs. Mercenaries.</p></header><div class="edition-library">""");
+        foreach (var edition in Editions.Where(e => e.Group == "Game versions")) body.Append(LibraryCard(edition));
+        body.Append("</div></section>");
         body.Append("</div></div><div class=\"workflow-band\"><div class=\"band-inner\">").Append(MatchingWorkflow())
             .Append("<div class=\"workflow-links\">").Append(Link("/projects/ps2/decomp", "PS2 matching guide →")).Append(Link("/projects/pc/decomp", "PC matching guide →")).Append("</div></div></div>")
             .Append("<div class=\"resources-band\"><div class=\"band-inner\">").Append(ReconstructionResources()).Append("</div></div>")
             .Append("""
               <div class="updates-band"><div class="band-inner"><section aria-labelledby="news-heading"><header class="hub-heading"><div><p class="hub-eyebrow">Development</p><h2 id="news-heading">Project updates</h2></div><a href="/changelog">All updates →</a></header><div class="hub-resources">
               """)
-            .Append(Resource("/changelog#game-latest", releaseLabel + releaseDate, "Changes to OpenSCCT Godot, the launcher and the tools for building content from Steam."))
+            .Append(Resource("/changelog#game-latest", releaseLabel + releaseDate, "Changes to OpenSCCT, the launcher and the tools for building content from Steam."))
             .Append(Resource(UnrealSource + "/releases", "Unreal releases", "Windows builds, engine changes and the history of the Unreal modernisation."))
             .Append(Resource(DecompSource + "/tree/main/reports", "Reconstruction reports", "Read the measurements and compiler evidence behind each original target."))
             .Append("</div></section></div></div><div class=\"legal-band\"><div class=\"band-inner\">").Append(LegalSection()).Append("</div></div></div>");
@@ -92,26 +87,11 @@ internal sealed partial class PlayerPortal
 
     private static string EditionImage(ProjectEdition edition) => AssetUrl("/web/assets/showcase-edition-" + edition.Id + ".webp");
 
-    private static string LibraryCard(ProjectEdition edition, JsonElement progress)
+    private static string LibraryCard(ProjectEdition edition)
     {
         string image = EditionImage(edition);
-        string details;
-        if (edition.Group == "Originals")
-        {
-            JsonElement targets = progress.EnumerateArray().First(p => p.GetProperty("id").GetString() == edition.Id).GetProperty("targets");
-            long verified = targets.EnumerateArray().Sum(t => t.GetProperty("matched_bytes").GetInt64());
-            var rows = new StringBuilder();
-            foreach (JsonElement target in targets.EnumerateArray())
-                rows.Append("<li><span>").Append(H(target.GetProperty("label").GetString())).Append("</span><strong>")
-                    .Append(H(Measure(target).Bytes)).Append(" verified</strong></li>");
-            details = $"<details class='card-evidence'><summary>{N(verified)} verified bytes · {N(targets.GetArrayLength())} targets</summary><ul>{rows}</ul>"
-                + Link("/progress#" + edition.Id, "Compiler evidence and candidates →") + "</details>";
-        }
-        else
-        {
-            string href = edition.Id == "godot" ? "/changelog#game-latest" : UnrealSource + "/releases";
-            details = $"<p class='card-release'><span class='release-dot'></span>{H(edition.Scope)} {Link(href, "Release notes ↗")}</p>";
-        }
+        string href = edition.Id == "godot" ? "/changelog#game-latest" : UnrealSource + "/releases";
+        string details = $"<p class='card-release'><span class='release-dot'></span>{H(edition.Scope)} {Link(href, "Release notes ↗")}</p>";
         return $"""
             <article class="library-card">
               <a href="/projects/{edition.Id}" class="library-image" aria-label="Explore {H(edition.Name)}"><img src="{H(image)}" width="1000" height="563" loading="lazy" alt=""></a>
@@ -138,26 +118,17 @@ internal sealed partial class PlayerPortal
         switch (edition.Id)
         {
             case "ps2":
-                steps = [("Prepare your disc", "Make an uncompressed ISO from your own Chaos Theory disc."),
-                    ("Configure PCSX2", "Set up PCSX2 with your console’s BIOS and controller settings."),
-                    ("Select the ISO", "In Games, choose PS2 original. Select your ISO and PCSX2, then launch the game.")];
-                scope = "Play the original console campaign and multiplayer components in PCSX2. Native reconstruction tracks the boot, offline and online programs from the disc separately.";
-                source = DecompGuide + "/ps2"; status = "Play via PCSX2"; proof = "/projects/ps2/decomp"; proofLabel = "PS2 matching guide"; break;
             case "pc":
-                steps = [("Install Chaos Theory", "Install the Steam edition or use the complete game from your PC media."),
-                    ("Choose the installation", "Select PC / Steam in Games. The launcher can find your Steam copy or use a folder you choose."),
-                    ("Choose a game mode", "Start campaign and co-op, or launch Versus separately. On Linux, Steam starts the Steam campaign and Wine runs Versus and manual installations.")];
-                scope = "The complete PC original includes campaign, co-op and Spies vs. Mercenaries. Enhanced and Reloaded are optional Versus mods. You can keep a separate modded installation.";
-                source = DecompGuide + "/pc"; status = "Play your installed game"; proof = "/projects/pc/decomp"; proofLabel = "PC matching guide"; break;
+                return Results.Redirect("/projects/" + edition.Id + "/decomp");
             case "godot":
                 steps = [("Install the Steam game", "Install Chaos Theory with its Versus files on this computer."),
-                    ("Build the original maps", "Under Modernisations, choose OpenSCCT Godot and select your installed Steam copy. Setup builds 11 match maps, eight tutorial maps and two front-end packages locally."),
+                    ("Build the original maps", "Under Game versions, choose OpenSCCT and select your installed Steam copy. Setup builds 11 match maps, eight tutorial maps and two front-end packages locally."),
                     ("Play or add a map", "Choose Play for the stock rotation. Open Maps for optional Enhanced variants and community maps.")];
                 scope = "Godot 4 handles rendering, sound and input. OpenSCCT’s simulation supports offline bot matches, online play and replays of Spies vs. Mercenaries.";
                 source = HubSource + "/tree/main/game"; status = "Windows and Linux"; proof = "/changelog#game-latest"; proofLabel = "Godot release notes"; break;
             case "unreal":
                 steps = [("Install Chaos Theory", "Install the Steam version with Versus on your Windows PC."),
-                    ("Set up Unreal", "In Modernisations, choose OpenSCCT Unreal to install the client. Open its setup window, select your Steam game folder and run the Unreal content converter."),
+                    ("Set up Unreal", "In Game versions, choose OpenSCCT Unreal 5.8.4 to install the client. Open its setup window, select your Steam game folder and run the Unreal content converter."),
                     ("Start a match", "Launch the Unreal client with the locally built stock maps. Community map downloads and maps you compile with OpenSCCT Editor are optional.")];
                 scope = "OpenSCCT’s shared simulation drives Spies vs. Mercenaries. Unreal Engine 5 handles lighting, materials, effects and the presentation of your locally converted maps and characters.";
                 source = UnrealSource; status = "Windows x64"; proof = UnrealSource + "/releases"; proofLabel = "Unreal release notes"; break;
@@ -167,7 +138,7 @@ internal sealed partial class PlayerPortal
         var body = new StringBuilder($"""
             <div class="project-site edition-page"><section class="edition-hero">
               <img class="edition-backdrop" src="{H(EditionImage(edition))}" width="1000" height="563" alt="">
-              <div class="edition-hero-copy"><a class="hub-back" href="/#{edition.Group.ToLowerInvariant()}">← {H(edition.Group)}</a>
+              <div class="edition-hero-copy"><a class="hub-back" href="/#game-versions">← {H(edition.Group)}</a>
               <p class="hub-eyebrow">{H(edition.Platform)} · {H(status)}</p><h1>{H(edition.Name)}</h1><p>{H(edition.Summary)}</p>
               <div class="hub-actions"><a class="hub-primary" href="/download">{HubIcon("download")} Download launcher</a>
               <a class="hub-secondary" href="/mods?edition={edition.Id}">Mods for this edition</a></div></div></section>
@@ -176,17 +147,9 @@ internal sealed partial class PlayerPortal
         foreach (var (title, text) in steps) body.Append($"<li><h3>{H(title)}</h3><p>{H(text)}</p></li>");
         body.Append("</ol></section><section class='hub-section scope-band'><div><h2>Project scope</h2><p>").Append(H(scope)).Append("</p><div class='hub-link-row'>")
             .Append(Link(proof, proofLabel + " →")).Append(Link("/progress#" + edition.Id, "Progress report")).Append(Link(source, "Project source")).Append("</div></div>");
-        if (edition.Group == "Originals")
-        {
-            JsonElement targets = _progressReport.ReadEditions().EnumerateArray().First(p => p.GetProperty("id").GetString() == edition.Id).GetProperty("targets");
-            body.Append("<div class='edition-proof'><p class='hub-eyebrow'>Original reconstruction</p><strong>")
-                .Append(N(targets.EnumerateArray().Sum(t => t.GetProperty("matched_bytes").GetInt64()))).Append(" verified bytes</strong><p>")
-                .Append(N(targets.GetArrayLength())).Append(" retail executables tracked. See the report for revision and compiler evidence.</p></div>");
-        }
-        else
         {
             string shot = edition.Id == "unreal" ? "showcase-unreal-aquarius.webp" : "showcase-bots.webp";
-            string caption = edition.Id == "unreal" ? "Aquarius in OpenSCCT Unreal, built from an installed Steam copy." : "A co-op boost in OpenSCCT Godot’s night vision.";
+            string caption = edition.Id == "unreal" ? "Aquarius in OpenSCCT Unreal 5.8.4, built from an installed Steam copy." : "A co-op boost in OpenSCCT’s night vision.";
             body.Append($"<figure class='edition-shot'><img src='{H(AssetUrl("/web/assets/" + shot))}' width='1200' height='675' loading='lazy' alt='{H(caption)}'><figcaption>{H(caption)}</figcaption></figure>");
         }
         body.Append("</section>");
@@ -251,8 +214,8 @@ internal sealed partial class PlayerPortal
     private IResult ProjectProgress(HttpContext c)
     {
         var body = new StringBuilder("<div class=\"project-site\">");
-        body.Append(ProjectHeading("Development", "Progress reports", "Track byte matches for the original executables and playable releases for the Godot and Unreal modernisations."))
-            .Append("<header class=\"hub-heading\"><h2>Originals</h2></header>")
+        body.Append(ProjectHeading("Development", "Progress reports", "Track byte matches for the original executables and playable releases for the Godot and Unreal game versions."))
+            .Append("<header class=\"hub-heading\"><h2>Original executable reconstruction</h2></header>")
             .Append("<p>Coverage measures code rebuilt byte for byte against each original executable. Compiler verification also requires evidence of the original compiler and flags.</p>")
             .Append("<div class=\"hub-link-row report-links\">").Append(Link(DecompGuide, "Reproduction guide"))
             .Append(Link(DecompSource + "/blob/main/reports/progress.json", "Report source")).Append("</div>");
@@ -266,7 +229,7 @@ internal sealed partial class PlayerPortal
                 <section id="{H(id)}" class="hub-section coverage-edition">
                   <header class="coverage-banner"><img src="{H(EditionImage(project))}" alt="" loading="lazy">
                     <div><p class="edition-platform">{H(edition.GetProperty("stage").GetString())}</p><h2>{H(project.Name)}</h2></div>
-                    {Link("/projects/" + id, "Edition setup ↗")}
+                    {Link("/projects/" + id + "/decomp", "Matching guide ↗")}
                   </header><div class="coverage-grid">
                 """);
             var rows = new List<string[]>();
@@ -285,11 +248,11 @@ internal sealed partial class PlayerPortal
                     .Append(Table(["Executable", "Scope", "Byte-identical candidates", "Verified code", "Verified progress"], rows)).Append("</details>");
             body.Append("</section>");
         }
-        body.Append("<section class=\"hub-section\"><header class=\"hub-heading\"><h2>Modernisations</h2></header>")
-            .Append(GuideSection("godot", "Godot 4", "OpenSCCT Godot", "Follow Windows and Linux builds, gameplay features and the porting evidence for the shared simulation.",
+        body.Append("<section class=\"hub-section\"><header class=\"hub-heading\"><h2>Game versions</h2></header>")
+            .Append(GuideSection("godot", "Godot 4", "OpenSCCT", "Follow Windows and Linux builds, gameplay features and the porting evidence for the shared simulation.",
                 Link("/changelog#game-latest", "Godot release notes") + Link("/improvements", "Features") +
                 Link(HubSource + "/blob/main/docs/progress/COVERAGE.md", "Simulation coverage")))
-            .Append(GuideSection("unreal", "Unreal Engine 5", "OpenSCCT Unreal", "Follow packaged builds, gameplay changes and open issues for the modern Spies vs. Mercenaries client.",
+            .Append(GuideSection("unreal", "Unreal Engine 5", "OpenSCCT Unreal 5.8.4", "Follow packaged builds, gameplay changes and open issues for the modern Spies vs. Mercenaries client.",
                 Link(UnrealSource + "/releases", "Unreal release notes") + Link(UnrealSource + "/issues", "Issue tracker")))
             .Append("</section></div>");
         return Show(c, "Progress reports", "progress", body.ToString());

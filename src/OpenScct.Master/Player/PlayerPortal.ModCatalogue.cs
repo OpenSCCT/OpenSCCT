@@ -54,9 +54,9 @@ internal sealed partial class PlayerPortal
         bool Matches(string terms) => words.All(word => terms.Contains(word, StringComparison.OrdinalIgnoreCase));
 
         var body = new StringBuilder("<div class=\"project-site mod-library\">");
-        body.Append(ProjectHeading("Community", "Mods", "Find optional Versus mods for the PC original and community maps for the Modernisations."))
+        body.Append(ProjectHeading("Community", "Mods", "Find optional Versus mods for the PC original and community maps for the Game versions."))
             .Append("<div class=\"mod-controls\"><nav class=\"mod-filters\" aria-label=\"Filter by edition\">");
-        (string Id, string Name)[] filters = [("", "All editions"), ("ps2", "PlayStation 2"), ("pc", "PC / Steam"), ("godot", "Godot"), ("unreal", "Unreal")];
+        (string Id, string Name)[] filters = [("", "All editions"), ("pc", "Retail map archive"), ("godot", "OpenSCCT"), ("unreal", "OpenSCCT Unreal 5.8.4")];
         foreach (var filter in filters)
         {
             string url = "/mods?edition=" + U(filter.Id) + (query.Length > 0 ? "&q=" + U(query) : "");
@@ -79,7 +79,7 @@ internal sealed partial class PlayerPortal
             if (maps.Length > 0)
             {
                 shown += maps.Length;
-                body.Append("<section class=\"mod-section\" aria-labelledby=\"community-map-heading\"><h2 id=\"community-map-heading\">Modernisation maps</h2><p>Build and play these maps with your Steam copy in Godot or Unreal.</p><div class=\"mod-grid\">");
+                body.Append("<section class=\"mod-section\" aria-labelledby=\"community-map-heading\"><h2 id=\"community-map-heading\">Community maps</h2><p>Build and play these maps with your Steam copy in Godot or Unreal.</p><div class=\"mod-grid\">");
                 foreach (CommunityMap map in maps)
                     body.Append($"""
                         <article class="mod-card">{MapImage(map, lazy: true)}<div class="mod-card-copy">
@@ -105,9 +105,6 @@ internal sealed partial class PlayerPortal
         }
         if (shown == 0 && query.Length > 0)
             body.Append("<p class=\"mod-empty\">No mods match your search. Try another name or edition.</p>");
-        else if (edition == "ps2")
-            body.Append("<section class=\"mod-empty\"><h2>PlayStation 2 mods</h2><p>Select a separately patched image made from your own disc in the PS2 setup.</p>")
-                .Append(Link("/projects/ps2", "See PS2 setup", "hub-secondary")).Append("</section>");
         return Show(c, "Mods", "mods", body.Append("</div>").ToString());
     }
 
@@ -127,7 +124,7 @@ internal sealed partial class PlayerPortal
                 {MapImage(map, lazy: false)}
                 <section class="mod-install" aria-labelledby="map-setup">
                   <h2 id="map-setup">Install this map</h2>
-                  <p>Requires your Steam copy of Chaos Theory and OpenSCCT Godot or Unreal. The launcher downloads {MapSize(map.DownloadBytes)} of map source and builds it using your local game files.</p>
+                  <p>Requires your Steam copy of Chaos Theory and OpenSCCT or Unreal. The launcher downloads {MapSize(map.DownloadBytes)} of map source and builds it using your local game files.</p>
                   <div class="hub-actions">{Link("openscct://maps/" + U(map.Code), "Open map in launcher", "hub-primary")}</div>
                   <p>With launcher 0.9.4 or newer, the button selects the map for review. You can also open Maps in the launcher and select {H(map.Title)}.</p>
                   {Link("/download", "Get the launcher", "hub-secondary")} {SourceDownloadLink(map)}

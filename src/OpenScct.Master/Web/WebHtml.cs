@@ -57,7 +57,7 @@ internal static class WebHtml
         if (active is "home" or "help" or "wiki" or "improvements")
             html.Append("<meta name=\"description\" content=\"").Append(H(active switch
             {
-                "home" => "Play, mod and follow the reconstruction of Splinter Cell: Chaos Theory on PlayStation 2 and PC, and explore the Godot and Unreal modernisations.",
+                "home" => "Play OpenSCCT or OpenSCCT Unreal 5.8.4 and follow the reconstruction of Chaos Theory on PlayStation 2 and PC.",
                 "wiki" when editorTheme => "OpenSCCT Editor documentation for map projects, geometry, events, lighting and playtesting.",
                 "wiki" => "OpenSCCT documentation for gameplay, gadgets, hosting, controls and map editing.",
                 "help" => "OpenSCCT installation, troubleshooting and contribution guides.",

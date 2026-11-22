@@ -58,7 +58,7 @@ internal sealed partial class PlayerPortal
             ("/changelog", "Release notes", "Godot, launcher and Editor updates"),
             ("/legal", "Legal", "Project notice and ownership"),
         };
-        catalog.AddRange(Editions.Select(e => ("/projects/" + e.Id, e.Name, e.Group + " · " + e.Platform + " · " + e.Summary)));
+        catalog.AddRange(Editions.Where(e => e.Group == "Game versions").Select(e => ("/projects/" + e.Id, e.Name, e.Group + " · " + e.Platform + " · " + e.Summary)));
         catalog.AddRange(ModSearchEntries());
         return catalog.Where(p => words.All(word => (p.Name + " " + p.Detail).Contains(word, StringComparison.OrdinalIgnoreCase)))
             .Concat(WikiContent.Search(query, "").Select(a => (Url: "/wiki/" + a.Slug, Name: a.Title, Detail: a.Summary))).ToList();

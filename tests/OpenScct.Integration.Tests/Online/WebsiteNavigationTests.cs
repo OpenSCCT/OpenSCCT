@@ -54,11 +54,11 @@ public sealed class WebsiteNavigationTests
                 File.Move(sidecar + ".new", sidecar, overwrite: true);
             }
             Replace(report.ToJsonString());
-            Assert.Contains(label, await http.GetStringAsync("/", ct), StringComparison.Ordinal);
+            Assert.Contains(label, await http.GetStringAsync("/progress", ct), StringComparison.Ordinal);
             Assert.Contains("731 / ", await http.GetStringAsync("/progress", ct), StringComparison.Ordinal);
             target["matched_bytes"] = 732;
             Replace(report.ToJsonString());
-            Assert.Contains("732 / ", await http.GetStringAsync("/", ct), StringComparison.Ordinal);
+            Assert.Contains("732 / ", await http.GetStringAsync("/progress", ct), StringComparison.Ordinal);
             target["matched_bytes"] = 733;
             target.AsObject().Remove("candidate_units");
             foreach (string invalid in new[] { "{", "{}", """{"schema_version":1,"editions":[]}""", report.ToJsonString() })
@@ -67,7 +67,7 @@ public sealed class WebsiteNavigationTests
                 Assert.Contains("732 / ", await http.GetStringAsync("/progress", ct), StringComparison.Ordinal);
             }
             File.Delete(sidecar);
-            Assert.Contains(label, await http.GetStringAsync("/", ct), StringComparison.Ordinal);
+            Assert.Contains(label, await http.GetStringAsync("/progress", ct), StringComparison.Ordinal);
         }
         finally { Directory.Delete(directory, recursive: true); }
     }
@@ -132,19 +132,15 @@ public sealed class WebsiteNavigationTests
             string home = await http.GetStringAsync("/", ct);
             string progress = await http.GetStringAsync("/progress", ct);
             string mods = await http.GetStringAsync("/mods", ct);
-            foreach (string edition in new[] { "ps2", "pc", "godot", "unreal" })
+            foreach (string edition in new[] { "godot", "unreal" })
             {
                 Assert.Contains("href=\"/projects/" + edition + "\"", home, StringComparison.Ordinal);
                 Assert.Contains("id=\"" + edition + "\"", progress, StringComparison.Ordinal);
                 Assert.Contains("id=\"" + edition + "\"", mods, StringComparison.Ordinal);
             }
-            string originals = Regex.Match(home, "<section[^>]+id=\"originals\".*?</section>", RegexOptions.Singleline).Value;
-            string modernisations = Regex.Match(home, "<section[^>]+id=\"modernisations\".*?</section>", RegexOptions.Singleline).Value;
-            Assert.Contains("/projects/ps2", originals, StringComparison.Ordinal);
-            Assert.Contains("/projects/pc", originals, StringComparison.Ordinal);
-            Assert.DoesNotContain("/projects/godot", originals, StringComparison.Ordinal);
-            Assert.Contains("/projects/godot", modernisations, StringComparison.Ordinal);
-            Assert.Contains("/projects/unreal", modernisations, StringComparison.Ordinal);
+            Assert.Contains("id=\"game-versions\"", home, StringComparison.Ordinal);
+            Assert.Contains("OpenSCCT Unreal 5.8.4", home, StringComparison.Ordinal);
+            Assert.DoesNotContain("id=\"originals\"", home, StringComparison.Ordinal);
             string godot = await http.GetStringAsync("/projects/godot", ct);
             Assert.Contains("11 match maps", godot, StringComparison.Ordinal);
             Assert.Contains("your installed Steam copy", godot, StringComparison.Ordinal);

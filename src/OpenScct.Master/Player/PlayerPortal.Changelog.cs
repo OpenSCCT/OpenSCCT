@@ -21,7 +21,7 @@ internal sealed partial class PlayerPortal
         var entries = game.Entries.Select((release, index) => (Release: release, Editor: false, Latest: index == 0, game.Unavailable))
             .Concat(editor.Entries.Select((release, index) => (Release: release, Editor: true, Latest: index == 0, editor.Unavailable)))
             .OrderByDescending(entry => entry.Release.Published).ToArray();
-        var body = new StringBuilder(PageHeader("OPENSCCT", "Updates", "Features, changes and fixes in OpenSCCT Godot, the launcher and the map editor.",
+        var body = new StringBuilder(PageHeader("OPENSCCT", "Updates", "Features, changes and fixes in OpenSCCT, the launcher and the map editor.",
             Link("/download", "Download the latest version →", "button secondary")));
         foreach (var product in new[] { (Feed: game, Name: "game", Url: ReleaseChangelog.ReleasesUrl), (Feed: editor, Name: "Editor", Url: ReleaseChangelog.EditorReleasesUrl) })
             if (product.Feed.Unavailable)

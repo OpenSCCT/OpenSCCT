@@ -15,7 +15,7 @@ public sealed class BrowserWikiTests
         var article = WikiContent.Find(slug);
         Assert.NotNull(article);
         string html = string.Join('\n', Array.ConvertAll(article.Sections, section => section.Html));
-        Assert.Contains("OpenSCCT Godot", html);
+        Assert.Contains("OpenSCCT", html);
         Assert.DoesNotContain("/play/", html);
         Assert.DoesNotContain("data-training-frame", html);
         Assert.DoesNotContain("browser-training.js", html);

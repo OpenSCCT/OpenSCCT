@@ -39,11 +39,11 @@ internal sealed partial class PlayerPortal
     {
         string? edition = c.Request.RouteValues["edition"]?.ToString();
         if (edition is not ("ps2" or "pc"))
-            return Show(c, "Guide unavailable", "projects", ProjectHeading("Originals", "Guide unavailable", "Choose the PS2 or PC matching guide.") + Link("/tools#project-guides", "Project guides"), status: 404);
+            return Show(c, "Guide unavailable", "projects", ProjectHeading("Reconstruction", "Guide unavailable", "Choose the PS2 or PC matching guide.") + Link("/tools#project-guides", "Project guides"), status: 404);
         bool ps2 = edition == "ps2";
         string title = ps2 ? "PlayStation 2 matching guide" : "PC / Steam matching guide";
-        string body = Link("/projects/" + edition, ps2 ? "PS2 original" : "PC / Steam", "hub-back")
-            + ProjectHeading("Originals", title, ps2
+        string body = Link("/progress#" + edition, "Progress reports", "hub-back")
+            + ProjectHeading("Reconstruction", title, ps2
                 ? "The European SLES-53287 revision 1.01 has separate MIPS boot, offline and online programs. Each has its own build identity."
                 : "Steam build 252084 contains separate 32-bit x86 executables for campaign and co-op, and for Versus.")
             + GuideSection("disassemble", "Disassemble", "Identify the retail input", ps2
@@ -64,7 +64,7 @@ internal sealed partial class PlayerPortal
         <div class="hub-resources legal-cards">
           <section><h3>Unofficial</h3><p>OpenSCCT is an independent fan project. Ubisoft has no affiliation with the project.</p></section>
           <section><h3>No game files</h3><p>The matching project publishes source, hashes and build instructions. Retail executables and disc images stay on the contributor’s computer.</p></section>
-          <section><h3>Your own copy</h3><p>Bring your PS2 disc image or installed PC game to play an original. The Godot and Unreal modernisations and OpenSCCT Editor use base assets built from your installed Steam copy.</p></section>
+          <section><h3>Your own copy</h3><p>The Godot and Unreal game versions and OpenSCCT Editor use base assets built from your installed Steam copy.</p></section>
         </div>
         """;
     private const string Trademark = "<p class=\"trademark\">Splinter Cell and Splinter Cell Chaos Theory are trademarks of Ubisoft Entertainment.</p>";
@@ -75,7 +75,7 @@ internal sealed partial class PlayerPortal
 
     private IResult Legal(HttpContext c) => Show(c, "Legal", "legal", "<div class=\"project-site\">"
         + ProjectHeading("OpenSCCT", "Legal", "Game ownership, project downloads and attribution.") + LegalCards + Trademark
-        + "<section class=\"hub-section\"><h2>Modernisations and community content</h2><p>Steam-based setup requires launcher 0.9.2 and game tools 0.8.166 or later. OpenSCCT Unreal offers a separate Windows converter. The Editor also reads content built locally from Steam. Additional community maps are available separately. Earlier releases and the historical content catalogue include converted assets.</p><div class=\"hub-link-row\">"
+        + "<section class=\"hub-section\"><h2>Game versions and community content</h2><p>Steam-based setup requires launcher 0.9.2 and game tools 0.8.166 or later. OpenSCCT Unreal 5.8.4 offers a separate Windows converter. The Editor also reads content built locally from Steam. Additional community maps are available separately. Earlier releases and the historical content catalogue include converted assets.</p><div class=\"hub-link-row\">"
         + Link("/projects/godot", "Godot setup") + Link("/projects/unreal", "Unreal setup") + Link(DecompGuide, "Matching project source")
         + Link("https://www.ubisoft.com/en-US/games/9058ea04-847b-4c8d-af09-438b8d804640", "Ubisoft game page") + "</div></section></div>");
 }

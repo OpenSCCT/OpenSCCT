@@ -39,7 +39,7 @@ internal sealed partial class PlayerPortal
         body.Append("<section class=\"hero community-hero\"><div><p class=\"eyebrow\">OPENSCCT</p><h1>Spies vs.<br><span>Mercenaries</span></h1><p class=\"lead\">")
             .Append(H(welcome)).Append("</p><div class=\"button-row\">").Append(Link("/download", "Download", "button"))
             .Append(Link("/servers", "Servers", "button secondary"))
-            .Append("</div><p class=\"hero-note\">OpenSCCT Godot · Windows &amp; Linux · Requires Chaos Theory on Steam</p><p class=\"hero-guide\">")
+            .Append("</div><p class=\"hero-note\">OpenSCCT · Windows &amp; Linux · Requires Chaos Theory on Steam</p><p class=\"hero-guide\">")
             .Append(Link("/wiki/getting-started", "Getting started", "text-link")).Append("</p></div>")
             .Append(HomeShowcase()).Append("</section>")
             .Append("<div data-live=\"home-stats\"><div class=\"stats-grid\">")
@@ -56,7 +56,7 @@ internal sealed partial class PlayerPortal
         body.Append(Section("Games and hubs online", "<div data-live=\"home-servers\">" + ServerTable(servers.Take(4)) + "</div>",
             "<div class=\"button-row\">" + LiveStatus + Link("/servers", "All games and hubs", "text-link") + "</div>"));
         body.Append(Section("Getting started", "<div class=\"grid-three\">" +
-            Feature("01", "Install", "Download the launcher for your platform. Choose OpenSCCT Godot to build its assets and original Versus maps from your Steam installation.", "/download", "Downloads") +
+            Feature("01", "Install", "Download the launcher for your platform. Choose OpenSCCT to build its assets and original Versus maps from your Steam installation.", "/download", "Downloads") +
             Feature("02", "Practice", "Offline bots and practice settings are available for testing controls, gadgets and map objectives.", "/wiki/practice", "Tutorials and practice") +
             Feature("03", "Join a session", "The server browser lists games and social hubs. Sign in inside the game when a server requires an account.", "/servers", "Games and hubs") + "</div>"));
         body.Append(ImprovementsPreview());
@@ -139,7 +139,7 @@ internal sealed partial class PlayerPortal
             "<button class=\"button\">Apply</button><span class=\"field-help\">Public profiles · Lifetime totals</span></form>" +
             "<div class=\"leaderboard-summary\"><p><strong>" + H(LeaderboardMetrics.First(m => m.Key == sort).Label) + "</strong> · " + H(description) + "</p><span>" + N(total) + " eligible player" + (total == 1 ? "" : "s") + "</span></div>" +
             LeaderboardTable(rows, sort, page) + Pager("/leaderboards?sort=" + U(sort), page, (page + 1) * PageSize < total) +
-            Section("How these rankings work", "<div class=\"grid-two\"><div class=\"panel\"><h3>Rounds that count</h3><p>Stats come from qualifying rounds reported by approved servers, with a winner and at least one signed-in player on each team. Offline practice does not add to these totals.</p><p class=\"account-side-note\">Win-rate rankings need at least 10 counted rounds. Detailed counters reflect the history recorded for that stat; older rounds may not include every counter.</p>" + Link("/wiki/progression-and-stats", "Progression and stats", "text-link") + "</div><div class=\"panel\"><h3>Profile visibility</h3><p>Named public profiles appear here. Private, hidden and actively banned accounts are excluded. Lifetime XP is retained through prestige.</p><p class=\"account-side-note\">K/D means kills per death. A dash means there is no denominator yet. Ties use XP, wins or rounds played, followed by account order.</p>" + Link("/account/privacy", "Profile privacy", "text-link") + "</div></div>"));
+            Section("How these rankings work", "<div class=\"grid-two\"><div class=\"panel\"><h3>Rounds that count</h3><p>Finish a non-practice OpenSCCT round against players or bots while signed in to earn career credit. Player-hosted games count.</p><p class=\"account-side-note\">Win-rate rankings need at least 10 counted rounds. Detailed counters reflect the history recorded for that stat; older rounds may not include every counter.</p>" + Link("/wiki/progression-and-stats", "Progression and stats", "text-link") + "</div><div class=\"panel\"><h3>Profile visibility</h3><p>Named public profiles appear here. Private, hidden and actively banned accounts are excluded. Lifetime XP is retained through prestige.</p><p class=\"account-side-note\">K/D means kills per death. A dash means there is no denominator yet. Ties use XP, wins or rounds played, followed by account order.</p>" + Link("/account/privacy", "Profile privacy", "text-link") + "</div></div>"));
     }
 
     private static readonly (string Key, string Label, string Description)[] LeaderboardMetrics =
@@ -305,7 +305,7 @@ internal sealed partial class PlayerPortal
     {
         int page = PageOf(c);
         List<MatchRow> matches = _store.Matches(page, PageSize, lookAhead: true);
-        return Show(c, "Recent matches", "matches", PageHeader("MATCH HISTORY", "Recent matches", "Recorded match results. A round adds to player stats and XP when an approved server reports a winner and at least one signed-in player on each team.", LiveStatus) +
+        return Show(c, "Recent matches", "matches", PageHeader("MATCH HISTORY", "Recent matches", "Recorded match results. Signed-in players can also earn career credit in bot and player-hosted games.", LiveStatus) +
             "<div data-live=\"matches\">" + MatchTable(matches.Take(PageSize)) + Pager("/matches", page, matches.Count > PageSize) + "</div>");
     }
 
