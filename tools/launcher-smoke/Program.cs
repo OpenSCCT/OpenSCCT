@@ -253,7 +253,7 @@ internal static class Program
             SemVersion unrealLatest = scenario.Name is "unreal-update" or "unreal-pending" or "unreal-busy" ? UnrealLatestVersion : UnrealVersion;
             var unrealRelease = new ReleaseInfo
             {
-                TagName = "v" + unrealLatest, Name = "OpenSCCT Unreal " + unrealLatest,
+                TagName = "v" + unrealLatest, Name = "OpenSCCT (UE5 rewrite) " + unrealLatest,
                 PublishedAt = release.PublishedAt, Body = release.Body,
                 HtmlUrl = unreal.ReleasesPage + "/tag/v" + unrealLatest,
             };
@@ -297,8 +297,8 @@ internal static class Program
                 if (scenario.Name == "editor-busy-game") Call(form, "SelectProduct", false);
                 break;
             case "unreal-busy":
-                Call(form, "SetOperation", "Installing OpenSCCT Unreal");
-                SetStatus(form, "Downloading OpenSCCT Unreal 0.2.0...", Color.FromArgb(184, 161, 143));
+                Call(form, "SetOperation", "Installing OpenSCCT (UE5 rewrite)");
+                SetStatus(form, "Downloading OpenSCCT (UE5 rewrite) 0.2.0...", Color.FromArgb(184, 161, 143));
                 Field<Control>(form, "_progress").Visible = true;
                 Field<Control>(form, "_progress").GetType().GetProperty("Fraction")!.SetValue(Field<Control>(form, "_progress"), 0.42);
                 Field<Label>(form, "_progressText").Text = "512.0 MB of 1210.0 MB  24.0 MB/s";
@@ -346,7 +346,7 @@ internal static class Program
         Settle(host);
         Save(host, output, label);
         Button main = Field<Button>(form, "_main");
-        Button help = Field<Button>(form, "_help");
+        Check(!Walk(host).OfType<Button>().Any(b => b.Text.TrimStart('&') == "Help"), label + " Help button removed");
         Check(main.Text == scenario.Button, label + " action is " + scenario.Button);
         if (scenario.Name == "ready")
             Check(main.BackColor == Color.FromArgb(120, 255, 140), label + " Game play button uses the green accent");
@@ -355,7 +355,6 @@ internal static class Program
         Check(disabledAction ? !main.Enabled : main.Enabled && main.CanSelect,
             label + (scenario.Name == "editor-applying" ? " apply cannot be cancelled"
                 : scenario.Name == "unreal-pending" ? " waiting Unreal update offers no start" : " primary action is keyboard selectable"));
-        Check(help.Enabled && help.CanSelect, label + " Help stays keyboard selectable");
         Button forceClose = Field<Button>(form, "_forceClose");
         if (scenario.Name == "remove-blocked")
         {
@@ -365,7 +364,7 @@ internal static class Program
         else Check(!forceClose.Visible, label + " force close is hidden outside blocked removal");
         Check(Field<Label>(form, "_heading").Text.Length > 0, label + " status heading is populated");
         if (scenario.Unreal)
-            Check(Field<Label>(form, "_installedInfo").Text.Contains(scenario.UnrealInstalled ? "OpenSCCT Unreal " + UnrealVersion : "not installed", StringComparison.Ordinal),
+            Check(Field<Label>(form, "_installedInfo").Text.Contains(scenario.UnrealInstalled ? "OpenSCCT (UE5 rewrite) " + UnrealVersion : "not installed", StringComparison.Ordinal),
                 label + " Unreal installed version is shown");
         else if (scenario.Game && scenario.Name != "editor-recovery")
             Check(Field<Label>(form, "_installedInfo").Text.Contains(scenario.Editor && scenario.Name != "editor-busy-game"
@@ -393,13 +392,13 @@ internal static class Program
             Check(Field<Button>(form, "_website").Text == "Unreal releases", label + " website action opens Unreal releases");
             string expected = scenario.Name switch
             {
-                "unreal-absent" => "Set up OpenSCCT Unreal",
+                "unreal-absent" => "Set up OpenSCCT (UE5 rewrite)",
                 "unreal-prerequisite" => "Steam files needed",
                 "unreal-update" => "Unreal update available",
                 "unreal-ready" => "Ready to play",
                 "unreal-steam-update" => "Steam content update",
                 "unreal-pending" => "Update ready",
-                "unreal-busy" => "Installing OpenSCCT Unreal",
+                "unreal-busy" => "Installing OpenSCCT (UE5 rewrite)",
                 _ => "Not released yet",
             };
             Check(Field<Label>(form, "_heading").Text == expected, label + " Unreal heading is " + expected);
@@ -435,7 +434,6 @@ internal static class Program
             Check(Field<Label[]>(form, "_previewItems").Count(c => c.Visible && c.Text.Length > 0) == 3, label + " three preview entries shown");
         }
         Check(IsInClient(host, main), label + " primary action is visible inside client area");
-        Check(IsInClient(host, help), label + " Help is visible inside client area");
         Check(host.SelectNextControl(null, true, true, true, false), label + " keyboard traversal enters launcher controls");
         if (scenario.Name == "old-client")
             Check(!Field<Button>(form, "_playCurrent").Visible, label + " old clients cannot launch even when Steam-built files exist");
@@ -480,7 +478,7 @@ internal static class Program
                 Check(Selected(form) == "Game" && OperationProduct(form) == owner, label + " Join selects Game without changing " + owner + " operation owner");
                 Check(Field<string>(form, "_pendingWebJoin") == "smoke-session" && !work.IsCancellationRequested, label + " Join queues without cancelling " + owner + " operation");
                 if (scenario.Unreal)
-                    Check(Field<Label>(form, "_heading").Text == "Unreal · Installing OpenSCCT Unreal", label + " Unreal operation owner survives tab changes");
+                    Check(Field<Label>(form, "_heading").Text == "Unreal · Installing OpenSCCT (UE5 rewrite)", label + " Unreal operation owner survives tab changes");
             }
             if (scenario.Name != "editor-applying")
             {
@@ -803,7 +801,7 @@ internal static class Program
             using var fixture = new Fixture(new Scenario("fresh", false, false, ""));
             using Form form = (Form)Activator.CreateInstance(MainType, Hidden, null,
                 new object?[] { fixture.Layout, null, null, fixture.LauncherPath }, null)!;
-            Check(Selected(form) == "Ps2", "Fresh launcher opens the PS2 edition");
+            Check(Selected(form) == "Game", "Fresh launcher opens OpenSCCT");
             Field<LauncherSettings>(form, "_settings").CheckOnStart = false;
             Field<LauncherSettings>(form, "_settings").UnrealCheckOnStart = false;
             form.StartPosition = FormStartPosition.Manual;
@@ -836,13 +834,11 @@ internal static class Program
             Check(Enumerable.Range(0, patch.Height).All(y => Enumerable.Range(0, patch.Width).All(x =>
                 partial.GetPixel(x, y) == full.GetPixel(x + patch.X, y + patch.Y))),
                 "Clipped artwork redraw matches the full banner pixel for pixel");
-            Save(form, output, "library-ps2-games");
-            Check(Field<Button>(form, "_main").Text == "Choose disc image", "Owned-disc setup action");
+            Save(form, output, "library-game-games");
             ComboBox editions = Field<ComboBox>(form, "_compactPicker");
-            Check(editions.Items.Cast<string>().SequenceEqual(new[] { "Originals  /  PlayStation 2", "Originals  /  PC / Steam",
-                "Modernisations  /  OpenSCCT Godot", "Modernisations  /  OpenSCCT Unreal", "Tools  /  OpenSCCT Editor" }),
-                "The library groups the originals, both modernisations and the editor.");
-            foreach (string edition in new[] { "Ps2", "Retail", "Game", "Unreal" })
+            Check(editions.Items.Cast<string>().SequenceEqual(new[] { "Game versions  /  OpenSCCT", "Game versions  /  OpenSCCT (UE5 rewrite)", "Tools  /  OpenSCCT Editor" }),
+                "The library groups both game versions and the editor.");
+            foreach (string edition in new[] { "Game", "Unreal" })
             {
                 Call(form, "SelectProduct", Product(edition));
                 foreach (string page in new[] { "_modsPage", "_settingsButton", "_gamesPage" })
@@ -861,7 +857,7 @@ internal static class Program
                     Save(form, output, "library-" + edition + "-" + page.TrimStart('_'));
                 }
             }
-            Call(form, "SelectProduct", Product("Retail"));
+            Call(form, "SelectProduct", Product("Game"));
             Field<Button>(form, "_modsPage").PerformClick();
             Call(form, "ShowEdition", "Unreal");
             Settle(form);
@@ -873,7 +869,7 @@ internal static class Program
             Check(picker.CanSelect && IsInClient(form, picker), "Compact layout provides an accessible edition chooser");
             picker.SelectedIndex = 0;
             Settle(form);
-            Check(Selected(form) == "Ps2" && IsInClient(form, Field<Button>(form, "_main")), "Compact PS2 setup action fits");
+            Check(Selected(form) == "Game" && IsInClient(form, Field<Button>(form, "_main")), "Compact OpenSCCT setup action fits");
             var updateButton = Field<Button>(form, "_launcherButton");
             var settingsButton = Field<Button>(form, "_settingsButton");
             Check(!updateButton.Visible, "Launcher update action stays hidden without an available update");
@@ -883,8 +879,8 @@ internal static class Program
             Check(updateButton.Parent == settingsButton.Parent && updateButton.Left >= settingsButton.Right
                 && updateButton.Top < settingsButton.Bottom && IsInClient(form, updateButton),
                 "Launcher updates fit directly beside Settings in the compact header");
-            Save(form, output, "library-ps2-compact");
-            Check(LauncherSettings.Load(fixture.Layout.Settings).SelectedProduct == "Ps2", "Edition is persisted");
+            Save(form, output, "library-game-compact");
+            Check(LauncherSettings.Load(fixture.Layout.Settings).SelectedProduct == "Game", "Edition is persisted");
             form.Hide();
         });
     }
@@ -1021,7 +1017,7 @@ internal static class Program
                 && Field<UpdateCheck?>(form, "_lastCheck") is null, "Unreal startup ignores the other products' enabled check preferences");
             Check(Field<Label>(form, "_heading").Text == "Ready to play" && Field<Button>(form, "_main").Text == "Play",
                 "Installed Unreal build is ready to play before any check");
-            Check(Field<Label>(form, "_installedInfo").Text == "OpenSCCT Unreal " + UnrealVersion + " · OpenSCCT " + InstalledVersion,
+            Check(Field<Label>(form, "_installedInfo").Text == "OpenSCCT (UE5 rewrite) " + UnrealVersion + " · OpenSCCT " + InstalledVersion,
                 "Unreal version line names the OpenSCCT version it was built from");
             Call(form, "SelectProduct", Product("Unreal"));
             Check(_networkAttempts == attempts, "Reselecting the Unreal tab with checks off stays offline");

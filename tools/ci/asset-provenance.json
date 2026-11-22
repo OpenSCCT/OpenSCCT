@@ -1702,6 +1702,18 @@
       "bytes": 5889684,
       "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
     },
+    "src/openscct.launcher/branding/library-editor.jpg": {
+      "bytes": 222457,
+      "sha256": "6c291a5425fc57f0bd419ef18861d10ec7436e1c61da6aa732101f204d29d114"
+    },
+    "src/openscct.launcher/branding/library-unreal.jpg": {
+      "bytes": 119083,
+      "sha256": "3a9650c08a1f0c381bd1880d4633eeebb6fe8df7bc444cf4afe1216f1cecb5e4"
+    },
+    "src/openscct.launcher/branding/library-godot.jpg": {
+      "bytes": 247491,
+      "sha256": "8d3ae712bdafc7e444b31c38c60fb1cb1a3ade1badcd7ce9e51034c1acd42b00"
+    },
     "src/openscct.launcher/branding/operation.jpg": {
       "bytes": 125055,
       "sha256": "a4a61c159fb4372f97e73bb84ab243c5f2b84013c9128cf623811c00ba8582c8"

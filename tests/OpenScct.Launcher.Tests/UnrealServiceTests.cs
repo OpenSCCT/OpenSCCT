@@ -69,8 +69,8 @@ public sealed class UnrealServiceTests
         Assert.Equal(UnrealInstallOutcome.Installed, result.Outcome);
         Assert.Equal(github.Payloads["OpenSCCT-Unreal-0.1.11-win-x64.zip"].Length, result.DownloadedBytes);
         Assert.Null(result.BuildBytes);
-        Assert.Contains(phases, p => p.Phase == "Downloading OpenSCCT Unreal");
-        Assert.Equal("OpenSCCT Unreal installed", phases[^1].Phase);
+        Assert.Contains(phases, p => p.Phase == "Downloading OpenSCCT (UE5 rewrite)");
+        Assert.Equal("OpenSCCT (UE5 rewrite) installed", phases[^1].Phase);
         Assert.False(phases[^1].CanCancel);
 
         UnrealInstallation installed = service.Installed()!;
@@ -441,7 +441,7 @@ public sealed class UnrealServiceTests
         var github = new FakeGitHub();
         github.AddVersion("0.1.11", Zip("0.1.11"));
         (UnrealService service, LauncherLayout layout) = Create(dir, github);
-        Assert.Contains("Install OpenSCCT Unreal first", Assert.Throws<InvalidOperationException>(() => service.StartInfo()).Message, StringComparison.Ordinal);
+        Assert.Contains("Install OpenSCCT (UE5 rewrite) first", Assert.Throws<InvalidOperationException>(() => service.StartInfo()).Message, StringComparison.Ordinal);
 
         var cancel = TestContext.Current.CancellationToken;
         await service.InstallAsync((await service.CheckAsync(false, cancel)).Latest!, null, cancel);
@@ -557,7 +557,7 @@ public sealed class UnrealServiceTests
         Assert.Equal(!removeMapPacks, Directory.Exists(layout.UnrealPacks));
         Assert.All(kept, folder => Assert.True(File.Exists(Path.Combine(folder, "keep.txt"))));
         Assert.True(File.Exists(layout.Settings));
-        Assert.Equal("OpenSCCT Unreal uninstalled", phases[^1].Phase);
+        Assert.Equal("OpenSCCT (UE5 rewrite) uninstalled", phases[^1].Phase);
     }
 
     [Fact]
@@ -695,7 +695,7 @@ public sealed class UnrealServiceTests
         await service.InstallAsync((await service.CheckAsync(false, cancel)).Latest!, null, cancel);
         var installed = Assert.IsType<UnrealInstallation>(service.Installed());
         File.WriteAllText(Path.Combine(installed.Folder, "contenttools", UnrealSteamInstall.RecipeFile), "{}");
-        Assert.Contains("Repair or reinstall OpenSCCT Unreal 0.1.11", UnrealService.SetupProblem(installed));
+        Assert.Contains("Repair or reinstall OpenSCCT (UE5 rewrite) 0.1.11", UnrealService.SetupProblem(installed));
         Assert.Throws<InvalidOperationException>(() => service.SetupInfo(null));
     }
 

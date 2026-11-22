@@ -152,7 +152,7 @@ internal sealed class LauncherController : IDisposable
     {
         bool updatingOlderClient = ClientUpdateRequired;
         if (!updatingOlderClient && !ContentReady && SteamSource is null)
-            throw new InvalidOperationException("Choose your Steam installation before installing OpenSCCT Godot.");
+            throw new InvalidOperationException("Choose your Steam installation before installing OpenSCCT.");
         if (Check is null || (Store.Current() is null || updatingOlderClient) && !Check.GameUpdateAvailable) await CheckAsync(cancel);
         if (Check is { GameUpdateAvailable: true, Latest: { } latest } && Store.Pending() is null)
         {
@@ -173,7 +173,7 @@ internal sealed class LauncherController : IDisposable
         if (ClientUpdateRequired) throw new InvalidOperationException("This client predates Steam content builds. Connect to the release channel and update Godot.");
         if (!ContentReady && SteamSource is null) Report("Choose your Steam installation to build the game content.");
         else if (!ContentReady) await InstallContentAsync(cancel);
-        else Report("OpenSCCT Godot is ready to play.");
+        else Report("OpenSCCT is ready to play.");
     }
 
     public void SelectSteam(string folder)
@@ -201,7 +201,7 @@ internal sealed class LauncherController : IDisposable
             Report(p.Line);
         });
         await _steamContent.BuildAsync(Layout.VersionDir(current.ToString()), source, progress, cancel);
-        Report("Steam content built. OpenSCCT Godot is ready to play.");
+        Report("Steam content built. OpenSCCT is ready to play.");
     }
 
     public async Task PlayAsync(bool skipUpdateCheck, Func<UpdateCheck, Task<PlayUpdateChoice>> choose, CancellationToken cancel)

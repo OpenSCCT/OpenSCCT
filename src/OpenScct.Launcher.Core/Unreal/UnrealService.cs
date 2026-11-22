@@ -23,7 +23,7 @@ using OpenScct.Launcher.Versioning;
 namespace OpenScct.Launcher.Unreal;
 
 /// <summary>
-/// Installs, updates and starts the Unreal Engine build of OpenSCCT ("OpenSCCT Unreal"), published as GitHub releases
+/// Installs, updates and starts the Unreal Engine build of OpenSCCT ("OpenSCCT (UE5 rewrite)"), published as GitHub releases
 /// tagged v&lt;version&gt;. It has its own install root (<see cref="LauncherLayout.Unreal"/>), laid out like the game's:
 /// install.json, versions\&lt;v&gt;\, downloads\ and cache\. Updates go through the game's <see cref="UpdateService"/>
 /// and <see cref="DeltaInstaller"/> (changed files and binary patches from the shared <see cref="StoreTag"/> release,
@@ -44,10 +44,10 @@ public sealed class UnrealService
     public const string Product = "OpenSCCT Unreal";
 
     /// <summary>Shown when the repository has no compatible release (or does not exist yet).</summary>
-    public const string NoReleaseMessage = "No OpenSCCT Unreal release is available yet.";
+    public const string NoReleaseMessage = "No OpenSCCT (UE5 rewrite) release is available yet.";
 
     /// <summary>Raised (as <see cref="UpdateRejectedException"/>) for a release this launcher cannot install.</summary>
-    public const string NeedsNewerLauncherMessage = "This OpenSCCT Unreal version needs a newer launcher.";
+    public const string NeedsNewerLauncherMessage = "This OpenSCCT (UE5 rewrite) version needs a newer launcher.";
 
     private const int LauncherProtocol = 1;
     private const int MaxMetadataBytes = 64 * 1024;
@@ -193,7 +193,7 @@ public sealed class UnrealService
 
     public ProcessStartInfo SetupInfo(string? steamFolder, bool rebuild = false)
     {
-        var installed = Installed() ?? throw new InvalidOperationException("Install OpenSCCT Unreal first.");
+        var installed = Installed() ?? throw new InvalidOperationException("Install OpenSCCT (UE5 rewrite) first.");
         if (SetupProblem(installed) is { } problem) throw new InvalidOperationException(problem);
         var info = new ProcessStartInfo(RuntimeHost(installed)) { UseShellExecute = false, WorkingDirectory = installed.Folder };
         info.ArgumentList.Add(SetupAssembly(installed));
@@ -224,10 +224,10 @@ public sealed class UnrealService
     public static string? SetupProblem(UnrealInstallation installed)
     {
         if (!SupportsSteamContent(installed.Version))
-            return $"Update OpenSCCT Unreal to {MinimumSteamVersion} or later to set up your Steam game files directly.";
+            return $"Update OpenSCCT (UE5 rewrite) to {MinimumSteamVersion} or later to set up your Steam game files directly.";
         if (!File.Exists(RuntimeHost(installed)) || !File.Exists(SetupAssembly(installed)) ||
             UnrealSteamInstall.ReadRecipe(Path.Combine(installed.Folder, "contenttools")) is null)
-            return $"The standalone converter is missing or damaged. Repair or reinstall OpenSCCT Unreal {installed.Version}.";
+            return $"The standalone converter is missing or damaged. Repair or reinstall OpenSCCT (UE5 rewrite) {installed.Version}.";
         return null;
     }
 
@@ -292,7 +292,7 @@ public sealed class UnrealService
         ArgumentNullException.ThrowIfNull(release);
         if (!_layout.Platform.Equals(LauncherPlatform.WindowsX64))
         {
-            throw new InvalidOperationException("OpenSCCT Unreal runs on Windows only.");
+            throw new InvalidOperationException("OpenSCCT (UE5 rewrite) runs on Windows only.");
         }
 
         cancel.ThrowIfCancellationRequested();
@@ -308,7 +308,7 @@ public sealed class UnrealService
             repair = true;
         }
 
-        progress?.Report(new UnrealProgress("Checking OpenSCCT Unreal " + release.Version));
+        progress?.Report(new UnrealProgress("Checking OpenSCCT (UE5 rewrite) " + release.Version));
         await CheckHandshakeAsync(release, cancel).ConfigureAwait(false);
         if (repair)
         {
@@ -319,13 +319,13 @@ public sealed class UnrealService
         _updates.PhaseChanged = phase => progress?.Report(phase switch
         {
             UpdatePhase.CheckingFiles => new UnrealProgress("Checking installed files"),
-            UpdatePhase.Downloading => new UnrealProgress("Downloading OpenSCCT Unreal"),
-            UpdatePhase.Installing => new UnrealProgress("Installing OpenSCCT Unreal"),
-            _ => new UnrealProgress("Installing OpenSCCT Unreal", CanCancel: false),
+            UpdatePhase.Downloading => new UnrealProgress("Downloading OpenSCCT (UE5 rewrite)"),
+            UpdatePhase.Installing => new UnrealProgress("Installing OpenSCCT (UE5 rewrite)"),
+            _ => new UnrealProgress("Installing OpenSCCT (UE5 rewrite)", CanCancel: false),
         });
         var bytes = progress is null ? null : new SyncProgress<DownloadProgress>(d => progress.Report(d.Total > 0 && d.Received >= d.Total
-            ? new UnrealProgress("Installing OpenSCCT Unreal", d.Received, d.Total)
-            : new UnrealProgress("Downloading OpenSCCT Unreal", d.Received, d.Total, d.BytesPerSecond)));
+            ? new UnrealProgress("Installing OpenSCCT (UE5 rewrite)", d.Received, d.Total)
+            : new UnrealProgress("Downloading OpenSCCT (UE5 rewrite)", d.Received, d.Total, d.BytesPerSecond)));
         InstallOutcome outcome;
         try
         {
@@ -343,8 +343,8 @@ public sealed class UnrealService
             _ => UnrealInstallOutcome.AlreadyCurrent,
         };
         progress?.Report(new UnrealProgress(result == UnrealInstallOutcome.WaitingForGameToClose
-            ? "OpenSCCT Unreal installed; it switches when the game closes"
-            : "OpenSCCT Unreal installed", CanCancel: false));
+            ? "OpenSCCT (UE5 rewrite) installed; it switches when the game closes"
+            : "OpenSCCT (UE5 rewrite) installed", CanCancel: false));
         long? downloaded = present ? null : _updates.LastDelta?.Downloaded ?? _updates.LastZip;
         long? build = present ? null : _updates.LastDelta?.BuildSize;
         return new UnrealInstallResult(result, release.Version, downloaded, build);
@@ -358,7 +358,7 @@ public sealed class UnrealService
     {
         if (IsRunning)
         {
-            throw new InvalidOperationException($"OpenSCCT Unreal {version} is damaged. Close OpenSCCT Unreal so it can be repaired.");
+            throw new InvalidOperationException($"OpenSCCT (UE5 rewrite) {version} is damaged. Close OpenSCCT (UE5 rewrite) so it can be repaired.");
         }
 
         try
@@ -367,7 +367,7 @@ public sealed class UnrealService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            throw new IOException($"OpenSCCT Unreal {version} is damaged and its folder could not be moved for repair: {ex.Message}", ex);
+            throw new IOException($"OpenSCCT (UE5 rewrite) {version} is damaged and its folder could not be moved for repair: {ex.Message}", ex);
         }
     }
 
@@ -403,7 +403,7 @@ public sealed class UnrealService
 
     private async Task<string> SmallAssetAsync(ReleaseAsset asset, CancellationToken cancel)
     {
-        const string tooLarge = "The OpenSCCT Unreal release information is too large to be read.";
+        const string tooLarge = "The OpenSCCT (UE5 rewrite) release information is too large to be read.";
         using HttpRequestMessage request = _github.CreateAssetRequest(asset);
         using HttpResponseMessage response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -440,17 +440,17 @@ public sealed class UnrealService
     /// </summary>
     public ProcessStartInfo StartInfo()
     {
-        UnrealInstallation installed = Installed() ?? throw new InvalidOperationException("Install OpenSCCT Unreal first.");
+        UnrealInstallation installed = Installed() ?? throw new InvalidOperationException("Install OpenSCCT (UE5 rewrite) first.");
         if (Pending is not null)
         {
             if (IsRunning)
             {
-                throw new InvalidOperationException("An OpenSCCT Unreal update is waiting for the game to close. Close OpenSCCT Unreal, then start it again.");
+                throw new InvalidOperationException("An OpenSCCT (UE5 rewrite) update is waiting for the game to close. Close OpenSCCT (UE5 rewrite), then start it again.");
             }
 
             if (FinishPendingSwitch())
             {
-                installed = Installed() ?? throw new InvalidOperationException("Install OpenSCCT Unreal first.");
+                installed = Installed() ?? throw new InvalidOperationException("Install OpenSCCT (UE5 rewrite) first.");
             }
         }
 
@@ -487,7 +487,7 @@ public sealed class UnrealService
         if (folder.Contains('"', StringComparison.Ordinal))
         {
             throw new InvalidOperationException(
-                "OpenSCCT Unreal cannot read a game files folder whose path has a double quote (\") in it: " + folder);
+                "OpenSCCT (UE5 rewrite) cannot read a game files folder whose path has a double quote (\") in it: " + folder);
         }
 
         if (folder.EndsWith('\\'))
@@ -611,12 +611,12 @@ public sealed class UnrealService
     {
         if (IsRunning)
         {
-            throw new InvalidOperationException("Close OpenSCCT Unreal before uninstalling it.");
+            throw new InvalidOperationException("Close OpenSCCT (UE5 rewrite) before uninstalling it.");
         }
 
         cancel.ThrowIfCancellationRequested();
         var failures = new List<string>();
-        progress?.Report(new UnrealProgress("Uninstalling OpenSCCT Unreal", CanCancel: false));
+        progress?.Report(new UnrealProgress("Uninstalling OpenSCCT (UE5 rewrite)", CanCancel: false));
         await Task.Run(() => Delete(_layout.Unreal, failures), CancellationToken.None).ConfigureAwait(false);
         if (removeMapPacks)
         {
@@ -624,7 +624,7 @@ public sealed class UnrealService
             await Task.Run(() => Delete(_layout.UnrealPacks, failures), CancellationToken.None).ConfigureAwait(false);
         }
 
-        progress?.Report(new UnrealProgress("OpenSCCT Unreal uninstalled", CanCancel: false));
+        progress?.Report(new UnrealProgress("OpenSCCT (UE5 rewrite) uninstalled", CanCancel: false));
         return new UnrealUninstallResult(failures);
     }
 

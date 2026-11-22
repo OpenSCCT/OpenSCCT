@@ -88,7 +88,7 @@ internal sealed partial class MainWindow : Window
         _godotSourceNotice = SourceStrip("Where is your Steam installation?", "Godot builds its original Versus maps and assets from your installed copy.",
             Link("Steam store", "https://store.steampowered.com/app/13570/"));
         _godotPage = Ui.Stack(_godotSourceNotice,
-            GameHero("Game", "Modernisations · Godot Engine", "OpenSCCT Godot", "Native Linux client for Spies vs. Mercs.", _main, _godotSteps),
+            GameHero("Game", "Game versions · Godot Engine", "OpenSCCT", "Native Linux client for Spies vs. Mercs.", _main, _godotSteps),
             _installActivity,
             Card("Game files", "Your Steam source and installed client", _sourcePath, _installed,
                 ButtonRow(_chooseSteam, _rebuildSteam, _check)),
@@ -194,8 +194,8 @@ internal sealed partial class MainWindow : Window
         _heading.Text = _model.Busy ? _model.Operation : next switch
         {
             LauncherAction.ChooseSteam => "Locate Chaos Theory",
-            LauncherAction.Install => "Install OpenSCCT Godot",
-            LauncherAction.Update => _model.ClientUpdateRequired ? "Update OpenSCCT Godot" : "An update is available",
+            LauncherAction.Install => "Install OpenSCCT",
+            LauncherAction.Update => _model.ClientUpdateRequired ? "Update OpenSCCT" : "An update is available",
             LauncherAction.FinishInstall => "Finish setting up",
             LauncherAction.Waiting => "Update ready to finish",
             _ => "Ready to play",
@@ -345,7 +345,7 @@ internal sealed partial class MainWindow : Window
             Card("Files and saves", _model.Layout.Root, ButtonRow(data, saves)),
             Card("Installation recovery", "Switch to a previous game build, or remove the installed builds and content. Reset keeps player settings, bindings and saves.",
                 ButtonRow(rollback, reset)),
-            ButtonRow(Link("Website", ProjectLinks.Website), ActionButton("Help", ShowHelpAsync)));
+            ButtonRow(Link("Website", ProjectLinks.Website)));
     }
 
     private async Task ShowHelpAsync()
@@ -543,26 +543,13 @@ internal sealed partial class MainWindow : Window
         try
         {
             await Task.Delay(200);
-            RequirePage("Games", "Ps2");
+            RequirePage("Games", "Game");
             SaveSmokeImage("launcher-desktop");
             Width = 1000;
             Height = 650;
             await Task.Delay(160);
-            if (!_sidebar.Children.OfType<TextBlock>().Select(label => label.Text).SequenceEqual(["ORIGINALS", "MODERNISATIONS"]))
-                throw new InvalidOperationException("The edition library did not show both groups in order.");
-            SaveSmokeImage("launcher-ps2");
-            _mods.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            RequirePage("Mods", "Ps2");
-            SaveSmokeImage("launcher-ps2-mods");
-            _games.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            _editionButtons["Retail"].RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            RequirePage("Games", "Retail");
-            await Task.Delay(100);
-            SaveSmokeImage("launcher-retail");
-            _mods.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            RequirePage("Mods", "Retail");
-            await Task.Delay(100);
-            SaveSmokeImage("launcher-retail-mods");
+            if (!_sidebar.Children.OfType<TextBlock>().Select(label => label.Text).SequenceEqual(["GAME VERSIONS"]))
+                throw new InvalidOperationException("The edition library did not show the Game versions group.");
             _editionButtons["Unreal"].RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             _games.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             RequirePage("Games", "Unreal");

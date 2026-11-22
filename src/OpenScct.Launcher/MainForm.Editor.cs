@@ -32,7 +32,7 @@ internal sealed partial class MainForm
         Product.Unreal => _settings.UnrealCheckOnStart,
         _ => _settings.CheckOnStart,
     };
-    private readonly LibraryEntry _gameTab = new LibraryEntry("GD", "OpenSCCT Godot", "Versus");
+    private readonly LibraryEntry _gameTab = new LibraryEntry("GD", "OpenSCCT", "Versus");
     private readonly LibraryEntry _editorTab = new LibraryEntry("ED", "OpenSCCT Editor", "Map authoring");
     private PictureBox _brandLogo = null!;
     private Label _brandSubtitle = null!;
@@ -67,8 +67,6 @@ internal sealed partial class MainForm
     /// <summary>The saved tab; an unknown value opens the Game tab.</summary>
     private static Product ParseProduct(string? name) => name switch
     {
-        "Ps2" => Product.Ps2,
-        "Retail" => Product.Retail,
         "Editor" => Product.Editor,
         "Unreal" => Product.Unreal,
         _ => Product.Game,
@@ -104,8 +102,6 @@ internal sealed partial class MainForm
         Theme.SetButtonEmphasis(_gameTab, _selected == Product.Game, Palette);
         Theme.SetButtonEmphasis(_editorTab, _selected == Product.Editor, Palette);
         Theme.SetButtonEmphasis(_unrealTab, _selected == Product.Unreal, Palette);
-        Theme.SetButtonEmphasis(_ps2Tab, _selected == Product.Ps2, Palette);
-        Theme.SetButtonEmphasis(_retailTab, _selected == Product.Retail, Palette);
         if (_brandLogo is null) return;
         // The Unreal build has no icon of its own yet: its logo is the game's in the Unreal accent, and the
         // window keeps the game's icon.
@@ -127,7 +123,7 @@ internal sealed partial class MainForm
         _tips.SetToolTip(_website, _selected switch
         {
             Product.Editor => "Visit the OpenSCCT Editor project.",
-            Product.Unreal => "See the OpenSCCT Unreal releases.",
+            Product.Unreal => "See the OpenSCCT (UE5 rewrite) releases.",
             _ => "Visit the OpenSCCT website.",
         });
         _settingsButton.AccessibleName = _selected switch
@@ -146,8 +142,8 @@ internal sealed partial class MainForm
             Product.Ps2 => ("PlayStation 2  /  2005", "Website"),
             Product.Retail => ("Windows PC  /  2005", "Website"),
             Product.Editor => ("Map authoring", "Editor website"),
-            Product.Unreal => ("Modernisations · Unreal Engine · Versus", "Unreal releases"),
-            _ => ("Modernisations · Godot · Versus", "Website"),
+            Product.Unreal => ("Game versions · Unreal Engine · Versus", "Unreal releases"),
+            _ => ("Game versions · Godot · Versus", "Website"),
         };
     }
 

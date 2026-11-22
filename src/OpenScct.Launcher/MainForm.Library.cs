@@ -16,8 +16,6 @@ internal sealed partial class MainForm
     private bool IsOriginalEdition => _selected is Product.Ps2 or Product.Retail;
     private readonly Button _gamesPage = Theme.Button("Games");
     private readonly Button _modsPage = Theme.Button("Mods");
-    private readonly LibraryEntry _ps2Tab = new LibraryEntry("PS2", "PlayStation 2", "Original disc");
-    private readonly LibraryEntry _retailTab = new LibraryEntry("PC", "PC / Steam", "Original Windows game");
     private readonly Button _retailSecondary = Theme.QuietButton("", onPanel: true);
     private readonly ComboBox _compactPicker = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat };
     private readonly Label _editionTitle = Theme.Wrapping(Theme.Label("", Theme.Title));
@@ -37,21 +35,21 @@ internal sealed partial class MainForm
     private readonly Label _sourceDetail = Theme.Wrapping(Theme.Label("", Theme.Body, Theme.Muted));
     private readonly Button _sourcePick = Theme.Button("");
     private Control _sourceCard = null!;
-    private static readonly Product[] LibraryOrder = [Product.Ps2, Product.Retail, Product.Game, Product.Unreal, Product.Editor];
+    private static readonly Product[] LibraryOrder = [Product.Game, Product.Unreal, Product.Editor];
 
     private static string EditionName(Product product) => product switch
     {
         Product.Ps2 => "PlayStation 2",
         Product.Retail => "PC / Steam",
-        Product.Unreal => "OpenSCCT Unreal",
+        Product.Unreal => "OpenSCCT (UE5 rewrite)",
         Product.Editor => "OpenSCCT Editor",
-        _ => "OpenSCCT Godot",
+        _ => "OpenSCCT",
     };
 
     private static string LibrarySection(Product product) => product switch
     {
         Product.Ps2 or Product.Retail => "Originals",
-        Product.Game or Product.Unreal => "Modernisations",
+        Product.Game or Product.Unreal => "Game versions",
         _ => "Tools",
     };
 
@@ -92,7 +90,6 @@ internal sealed partial class MainForm
         _launcherButton.Margin = new Padding(8, 0, 0, 0);
         _launcherButton.Anchor = AnchorStyles.Left;
         SetGlyph(_website, "website");
-        SetGlyph(_help, "help");
 
         using Icon mark = Theme.LoadIcon(48);
         _brandLogo = new PictureBox
@@ -107,7 +104,7 @@ internal sealed partial class MainForm
         var brand = Theme.Grid(Theme.Auto, Theme.Auto, Theme.Auto);
         Theme.AddRow(brand, _brandLogo, wordmark, version);
         brand.Anchor = AnchorStyles.Left;
-        FlowLayoutPanel links = Theme.Flow(false, _website, _help);
+        FlowLayoutPanel links = Theme.Flow(false, _website);
         links.Anchor = AnchorStyles.Right;
         var header = Theme.Grid(Theme.Auto, Theme.Fill, Theme.Auto);
         Theme.AddRow(header, brand, pages, links);
@@ -116,11 +113,11 @@ internal sealed partial class MainForm
         var rail = Theme.Grid(Theme.Fill);
         rail.Name = "EditionLibrary";
         rail.Padding = new Padding(0, 0, 18, 0);
-        var railButtons = new[] { _ps2Tab, _retailTab, _gameTab, _unrealTab, _editorTab };
+        var railButtons = new[] { _gameTab, _unrealTab, _editorTab };
         for (int index = 0; index < LibraryOrder.Length; index++)
         {
             Product product = LibraryOrder[index];
-            if (product is Product.Ps2 or Product.Game or Product.Editor)
+            if (product is Product.Game or Product.Editor)
             {
                 var section = Theme.Label(LibrarySection(product), Theme.Heading, Theme.Muted);
                 section.UseMnemonic = false;
@@ -330,10 +327,6 @@ internal sealed partial class MainForm
 
     private void RefreshLibraryBadges()
     {
-        bool discReady = Ps2.NextAction == OpenScct.Launcher.Ps2.Ps2Action.Play;
-        _ps2Tab.SetStatus(discReady ? "Ready to play" : Ps2Status, discReady);
-        bool retailReady = RetailReady;
-        _retailTab.SetStatus(retailReady ? (_settings.Retail.UseMod ? "Modded game ready" : "Ready to play") : "Setup needed", retailReady);
         var unreal = _unreal.Installed();
         bool unrealReady = UnrealService.SupportsSteamContent(unreal?.Version) && _unreal.PrerequisiteProblem() is null;
         _unrealTab.SetStatus(unreal is null ? "Not installed" : unrealReady ? "Ready to play" : "Setup needed", unrealReady);

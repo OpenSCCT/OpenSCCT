@@ -94,7 +94,6 @@ internal sealed partial class MainForm : Form
     private readonly Button _whatsNew = Theme.QuietButton("Full changelog", onPanel: true);
     private readonly Button _check = Theme.QuietButton("Check for updates");
     private readonly Button _website = Theme.QuietButton("Website");
-    private readonly Button _help = Theme.QuietButton("&Help");
     private readonly Button _mapsButton = Theme.QuietButton("Maps");
     private readonly Button _settingsButton = Theme.QuietButton("Settings");
     private readonly Button _launcherButton = Theme.Button("Restart to finish");
@@ -130,7 +129,7 @@ internal sealed partial class MainForm : Form
         _unreal = new UnrealService(_layout, Http, _settings.UnrealRepository);
         // A website Join always opens the Game tab.
         _selected = joinServerId is not null ? Product.Game
-            : File.Exists(_layout.Settings) || File.Exists(_layout.Manifest) ? ParseProduct(_settings.SelectedProduct) : Product.Ps2;
+            : ParseProduct(_settings.SelectedProduct);
         if (launcherPath is { } exe)
         {
             _swap = new LauncherSwap(exe);
@@ -298,7 +297,6 @@ internal sealed partial class MainForm : Form
         BuildLibraryShell(launch, preview, more);
 
         _tips.SetToolTip(_website, "Visit the OpenSCCT website in your browser.");
-        _tips.SetToolTip(_help, "Get help, suggest a feature or contribute to OpenSCCT.");
         _tips.SetToolTip(_mapsButton, "Download new maps made by the community.");
 
         _retailSecondary.Click += (_, _) => RetailSecondaryAction();
@@ -320,7 +318,6 @@ internal sealed partial class MainForm : Form
             Product.Unreal => _unreal.ReleasesPage,
             _ => "https://master.lumbridge.co.uk/",
         });
-        _help.Click += (_, _) => OpenHelp();
         _settingsButton.Click += (_, _) => SelectPage(LibraryPage.Settings);
         _mapsButton.Click += (_, _) => OpenMaps();
         _launcherButton.Click += async (_, _) =>
@@ -480,7 +477,7 @@ internal sealed partial class MainForm : Form
         }
         else if (current is null)
         {
-            _heading.Text = "Install OpenSCCT Godot";
+            _heading.Text = "Install OpenSCCT";
             _launchDetail.Text = _lastCheck is { Latest: null }
                 ? "No download found. Check your connection and try again."
                 : "Download the Godot client and build the game files from your Steam installation.";
@@ -644,7 +641,7 @@ internal sealed partial class MainForm : Form
             Text = _selected switch
             {
                 Product.Editor => "OpenSCCT Editor — What’s new",
-                Product.Unreal => "OpenSCCT Unreal — What’s new",
+                Product.Unreal => "OpenSCCT (UE5 rewrite) — What’s new",
                 _ => _notesTitle,
             },
             Icon = Icon,
@@ -678,7 +675,7 @@ internal sealed partial class MainForm : Form
         string body = _selected switch
         {
             Product.Editor => SelectedRelease?.Body ?? "No editor release notes cached.",
-            Product.Unreal => SelectedRelease?.Body ?? "No OpenSCCT Unreal release notes cached.",
+            Product.Unreal => SelectedRelease?.Body ?? "No OpenSCCT (UE5 rewrite) release notes cached.",
             _ => _notesText,
         };
         notes.Rtf = ReleaseNotesRtf.Convert(body, Rgb(Palette.Text), Rgb(Palette.Accent), Rgb(Palette.Muted), Theme.Body.SizeInPoints);
@@ -1117,7 +1114,7 @@ internal sealed partial class MainForm : Form
     {
         if (_work is not null || !VisibleStatus.CanForceClose) return;
         if (MessageBox.Show(this,
-            "Force close all running OpenSCCT games (OpenSCCT Unreal included), the installed editor and its command-line tools, then retry removing the game and shared files?\n\nUnsaved work will be lost.",
+            "Force close all running OpenSCCT games (OpenSCCT (UE5 rewrite) included), the installed editor and its command-line tools, then retry removing the game and shared files?\n\nUnsaved work will be lost.",
             "Force close OpenSCCT", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.OK)
             return;
 
@@ -1141,7 +1138,7 @@ internal sealed partial class MainForm : Form
     }
 
     /// <summary>
-    /// Deletes what the launcher installed once the game and editor release their files. The OpenSCCT Unreal
+    /// Deletes what the launcher installed once the game and editor release their files. The OpenSCCT (UE5 rewrite)
     /// install and its map packs are kept (they have their own uninstall on the Unreal tab).
     /// </summary>
     private void RemoveGameFiles(bool forceCloseAttempted = false)
@@ -1153,7 +1150,7 @@ internal sealed partial class MainForm : Form
                 ? "Wait for the editor update to finish before removing game and shared files."
                 : forceCloseAttempted
                     ? "Some OpenSCCT processes are still running. Close them before removing game and shared files."
-                    : "Close OpenSCCT, OpenSCCT Unreal, the editor and its command-line tools before removing game and shared files.";
+                    : "Close OpenSCCT, OpenSCCT (UE5 rewrite), the editor and its command-line tools before removing game and shared files.";
             SetStatus(warning, Theme.Warning, canForceClose: true);
             return;
         }
