@@ -22,13 +22,13 @@ internal sealed partial class MainWindow
 {
     private static readonly (string Id, string Title, string Group)[] Editions =
     [
-        ("Game", "OpenSCCT", "Game versions"), ("Unreal", "OpenSCCT (UE5 rewrite)", "Game versions"),
+        ("Game", "OpenSCCT", "Game versions"), ("Unreal", "OpenSCCT Unreal 5.8.4", "Game versions"),
     ];
 
     private readonly StackPanel _godotPage;
     private readonly ContentControl _page = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock _feedback = Ui.Text(string.Empty, 14);
-    private readonly StackPanel _sidebar = new() { Spacing = 4, Width = 208 };
+    private readonly StackPanel _sidebar = new() { Spacing = 4, Width = 282 };
     private readonly ComboBox _compactEditions = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly Dictionary<string, Button> _editionButtons = new();
     private readonly Button _games = Ui.Button("Games");
@@ -108,7 +108,7 @@ internal sealed partial class MainWindow
         body.Children.Add(_libraryScroll);
         void ResizeLibrary(double width)
         {
-            bool compact = width < 780;
+            bool compact = width < 860;
             _sidebar.IsVisible = !compact;
             _compactEditions.IsVisible = compact && _section != "Settings";
             body.ColumnSpacing = compact ? 0 : 18;
@@ -128,7 +128,7 @@ internal sealed partial class MainWindow
     }
 
     private Control UnrealPage(bool mods) => Ui.Stack(
-        GameHero("Unreal", "Game versions · Unreal Engine", mods ? "Unreal community maps" : "OpenSCCT (UE5 rewrite)",
+        GameHero("Unreal", "Game versions · Unreal Engine", mods ? "Unreal community maps" : "OpenSCCT Unreal 5.8.4",
             mods ? "Manage maps using the Windows launcher." : "The Unreal modernisation is available for Windows x64.",
             Link("Unreal releases", "https://github.com/OpenSCCT/OpenSCCT-Unreal/releases"),
             Ui.Text("Windows x64", 13, Ui.Muted)),

@@ -163,7 +163,7 @@ internal sealed partial class MainForm
                 string description = _selected switch
                 {
                     Product.Editor => "Set the Steam source and manage your installed map editor.",
-                    Product.Unreal => "OpenSCCT (UE5 rewrite) rebuilds Versus in Unreal Engine with new graphics and local Steam assets.",
+                    Product.Unreal => "OpenSCCT Unreal 5.8.4 rebuilds Versus in Unreal Engine with new graphics and local Steam assets.",
                     _ => "OpenSCCT rebuilds Versus in Godot with modern rendering, networking and controls.",
                 };
                 Add(_selected == Product.Editor ? "Editor installation" : "Changes from the original", description,

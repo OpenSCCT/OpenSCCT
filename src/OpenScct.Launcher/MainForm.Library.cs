@@ -41,7 +41,7 @@ internal sealed partial class MainForm
     {
         Product.Ps2 => "PlayStation 2",
         Product.Retail => "PC / Steam",
-        Product.Unreal => "OpenSCCT (UE5 rewrite)",
+        Product.Unreal => "OpenSCCT Unreal 5.8.4",
         Product.Editor => "OpenSCCT Editor",
         _ => "OpenSCCT",
     };
@@ -175,7 +175,7 @@ internal sealed partial class MainForm
         var detailPane = new Panel { Dock = DockStyle.Fill, Margin = new Padding(0), AutoScroll = true };
         detailPane.Controls.Add(content);
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Margin = new Padding(0) };
-        body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 250));
+        body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 310));
         body.ColumnStyles.Add(Theme.Fill);
         body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         body.Controls.Add(rail, 0, 0);
@@ -191,11 +191,11 @@ internal sealed partial class MainForm
         {
             if (Disposing || IsDisposed || shell.Disposing) return;
             float scale = Math.Max(DeviceDpi / 96f, _gamesPage.Font.SizeInPoints / Theme.Body.SizeInPoints);
-            bool compact = shell.ClientSize.Width < 800 * scale;
+            bool compact = shell.ClientSize.Width < 900 * scale;
             _compact = compact;
             rail.Visible = !compact;
             _compactPicker.Visible = compact;
-            body.ColumnStyles[0].Width = compact ? 0 : (int)Math.Ceiling(Math.Clamp(shell.ClientSize.Width * .21f, 218 * scale, 298 * scale));
+            body.ColumnStyles[0].Width = compact ? 0 : (int)Math.Ceiling(310 * scale);
             brand.Visible = !compact;
             links.Visible = !compact;
             version.Visible = !compact;

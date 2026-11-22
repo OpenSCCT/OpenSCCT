@@ -174,10 +174,10 @@ internal sealed class SettingsForm : Form
             uninstall.Enabled = HasEntries(layout.Unreal);
             uninstall.Click += (_, _) => { UninstallUnrealRequested = true; Save(); };
             Row(Theme.Label("Unreal installation", Theme.Heading, Theme.Accent), 18);
-            Row(Theme.Wrapping(Theme.Label("Remove OpenSCCT (UE5 rewrite). Keeps the OpenSCCT game, its maps, the editor and your game settings. You choose whether to keep its map packs.", Theme.Small, Theme.Muted)), 6);
+            Row(Theme.Wrapping(Theme.Label("Remove OpenSCCT Unreal 5.8.4. Keeps the OpenSCCT game, its maps, the editor and your game settings. You choose whether to keep its map packs.", Theme.Small, Theme.Muted)), 6);
             Row(uninstall);
             if (!uninstall.Enabled)
-                Row(Theme.Wrapping(Theme.Label("OpenSCCT (UE5 rewrite) is not installed.", Theme.Small, Theme.Muted)), 4);
+                Row(Theme.Wrapping(Theme.Label("OpenSCCT Unreal 5.8.4 is not installed.", Theme.Small, Theme.Muted)), 4);
         }
         else
         {
@@ -259,14 +259,14 @@ internal sealed class SettingsForm : Form
 
     public bool UninstallEditorRequested { get; private set; }
 
-    /// <summary>The player asked to uninstall OpenSCCT (UE5 rewrite); the launcher confirms what to remove.</summary>
+    /// <summary>The player asked to uninstall OpenSCCT Unreal 5.8.4; the launcher confirms what to remove.</summary>
     public bool UninstallUnrealRequested { get; private set; }
 
     private void ConfirmRemoveGameFiles()
     {
         DialogResult answer = MessageBox.Show(
             this,
-            "Remove all Godot versions, built game files, shared assets and downloaded maps?\n\nThe editor and OpenSCCT (UE5 rewrite) will need the Steam files built again. The editor application, OpenSCCT (UE5 rewrite), projects, settings, saves and launcher preferences are kept.",
+            "Remove all Godot versions, built game files, shared assets and downloaded maps?\n\nThe editor and OpenSCCT Unreal 5.8.4 will need the Steam files built again. The editor application, OpenSCCT Unreal 5.8.4, projects, settings, saves and launcher preferences are kept.",
             "Remove game and shared files",
             MessageBoxButtons.OKCancel,
             MessageBoxIcon.Warning,

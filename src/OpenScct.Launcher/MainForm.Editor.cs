@@ -123,7 +123,7 @@ internal sealed partial class MainForm
         _tips.SetToolTip(_website, _selected switch
         {
             Product.Editor => "Visit the OpenSCCT Editor project.",
-            Product.Unreal => "See the OpenSCCT (UE5 rewrite) releases.",
+            Product.Unreal => "See the OpenSCCT Unreal 5.8.4 releases.",
             _ => "Visit the OpenSCCT website.",
         });
         _settingsButton.AccessibleName = _selected switch

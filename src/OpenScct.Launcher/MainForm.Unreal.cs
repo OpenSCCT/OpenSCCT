@@ -23,7 +23,7 @@ internal sealed partial class MainForm
     private UnrealCheck? _unrealCheck;
     private bool _unrealSetupFailed;
     private ProductStatus _unrealStatus = new(string.Empty, StatusKind.Normal);
-    private readonly LibraryEntry _unrealTab = new LibraryEntry("UE", "OpenSCCT (UE5 rewrite)", "Versus remake");
+    private readonly LibraryEntry _unrealTab = new LibraryEntry("UE", "OpenSCCT Unreal 5.8.4", "Versus remake");
 
     internal void ShowEdition(string name)
     {
@@ -96,7 +96,7 @@ internal sealed partial class MainForm
         bool waiting = pending is not null && _unreal.IsRunning;
 
         _installedInfo.Text = installed is null ? "Unreal Engine build · not installed"
-            : "OpenSCCT (UE5 rewrite) " + installed.Version + (installed.OpenscctVersion is { Length: > 0 } core ? " · OpenSCCT " + core : string.Empty);
+            : "OpenSCCT Unreal 5.8.4 " + installed.Version + (installed.OpenscctVersion is { Length: > 0 } core ? " · OpenSCCT " + core : string.Empty);
 
         if (busy)
         {
@@ -110,17 +110,17 @@ internal sealed partial class MainForm
         else if (waiting && !update)
         {
             _heading.Text = "Update ready";
-            _launchDetail.Text = "Close OpenSCCT (UE5 rewrite) to finish the update.";
+            _launchDetail.Text = "Close OpenSCCT Unreal 5.8.4 to finish the update.";
         }
         else if (installed is null)
         {
-            _heading.Text = "Set up OpenSCCT (UE5 rewrite)";
+            _heading.Text = "Set up OpenSCCT Unreal 5.8.4";
             _launchDetail.Text = "Early build of OpenSCCT on Unreal Engine. Windows only.";
         }
         else if (update)
         {
             _heading.Text = "Unreal update available";
-            _launchDetail.Text = $"OpenSCCT (UE5 rewrite) {latest!.Version} is ready to download.";
+            _launchDetail.Text = $"OpenSCCT Unreal 5.8.4 {latest!.Version} is ready to download.";
         }
         else if (setupProblem is not null)
         {
@@ -160,12 +160,12 @@ internal sealed partial class MainForm
 
     private async Task CheckUnrealAsync(CancellationToken cancel)
     {
-        SetOperation("Checking OpenSCCT (UE5 rewrite) updates");
+        SetOperation("Checking OpenSCCT Unreal 5.8.4 updates");
         _unrealCheck = await _unreal.CheckAsync(_settings.UnrealIncludePrereleases, cancel);
         RefreshReleasePreview();
         SetStatus(_unrealCheck.Feed.Problem ?? (_unrealCheck.Latest is null ? UnrealService.NoReleaseMessage
-            : _unrealCheck.UpdateAvailable ? "An OpenSCCT (UE5 rewrite) update is available." : _unrealCheck.Installed is null ? string.Empty
-            : "OpenSCCT (UE5 rewrite) is up to date."),
+            : _unrealCheck.UpdateAvailable ? "An OpenSCCT Unreal 5.8.4 update is available." : _unrealCheck.Installed is null ? string.Empty
+            : "OpenSCCT Unreal 5.8.4 is up to date."),
             _unrealCheck.Feed.Problem is null ? Theme.Muted : Theme.Warning);
     }
 
@@ -197,7 +197,7 @@ internal sealed partial class MainForm
         if (_unreal.Pending is not null && _unreal.IsRunning)
         {
             // The update becomes current once the game closes (the pending timer switches it); nothing to start yet.
-            SetStatus("Close OpenSCCT (UE5 rewrite) to finish the update.", Theme.Muted);
+            SetStatus("Close OpenSCCT Unreal 5.8.4 to finish the update.", Theme.Muted);
             return;
         }
         await OpenUnrealAsync();
@@ -218,7 +218,7 @@ internal sealed partial class MainForm
         catch (Exception ex) when ((ex is InvalidOperationException or IOException) && _unreal.IsRunning)
         {
             _unrealSetupFailed = true;
-            SetStatus("Close OpenSCCT (UE5 rewrite), then retry. Downloads resume where they stopped.", Theme.Error, canForceClose: true);
+            SetStatus("Close OpenSCCT Unreal 5.8.4, then retry. Downloads resume where they stopped.", Theme.Error, canForceClose: true);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -237,11 +237,11 @@ internal sealed partial class MainForm
             return;
         }
         if (!UnrealService.SupportsSteamContent(latest.Version))
-            throw new InvalidOperationException($"OpenSCCT (UE5 rewrite) {UnrealService.MinimumSteamVersion} or later is required for Steam assets.");
+            throw new InvalidOperationException($"OpenSCCT Unreal 5.8.4 {UnrealService.MinimumSteamVersion} or later is required for Steam assets.");
         if (installed is not null && latest.Version <= (_unreal.Pending ?? installed.Version)) return;
 
-        SetOperation("Installing OpenSCCT (UE5 rewrite)");
-        SetStatus($"Downloading OpenSCCT (UE5 rewrite) {latest.Version}...", Theme.Muted);
+        SetOperation("Installing OpenSCCT Unreal 5.8.4");
+        SetStatus($"Downloading OpenSCCT Unreal 5.8.4 {latest.Version}...", Theme.Muted);
         var progress = new Progress<UnrealProgress>(p =>
         {
             if (IsDisposed || _work is null) return;
@@ -261,9 +261,9 @@ internal sealed partial class MainForm
         string downloaded = result.DownloadedBytes is long bytes && bytes > 0 ? $" Downloaded {Mb(bytes)}." : string.Empty;
         SetStatus(result.Outcome switch
         {
-            UnrealInstallOutcome.Installed => $"OpenSCCT (UE5 rewrite) {result.Version} is installed.{downloaded}",
-            UnrealInstallOutcome.WaitingForGameToClose => $"OpenSCCT (UE5 rewrite) {result.Version} is ready and starts once you close the game.",
-            _ => $"OpenSCCT (UE5 rewrite) {result.Version} is already installed.",
+            UnrealInstallOutcome.Installed => $"OpenSCCT Unreal 5.8.4 {result.Version} is installed.{downloaded}",
+            UnrealInstallOutcome.WaitingForGameToClose => $"OpenSCCT Unreal 5.8.4 {result.Version} is ready and starts once you close the game.",
+            _ => $"OpenSCCT Unreal 5.8.4 {result.Version} is already installed.",
         }, Theme.Accent);
     }
 
@@ -271,19 +271,19 @@ internal sealed partial class MainForm
     {
         if (_work is not null || !VisibleStatus.CanForceClose) return;
         if (MessageBox.Show(this,
-            "Force close OpenSCCT (UE5 rewrite), then retry the update?\n\nProgress in a running match will be lost.",
-            "Force close OpenSCCT (UE5 rewrite)", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.OK)
+            "Force close OpenSCCT Unreal 5.8.4, then retry the update?\n\nProgress in a running match will be lost.",
+            "Force close OpenSCCT Unreal 5.8.4", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.OK)
             return;
 
         await RunAsync(async cancel =>
         {
             _operationCanCancel = false;
-            SetOperation("Closing OpenSCCT (UE5 rewrite)");
+            SetOperation("Closing OpenSCCT Unreal 5.8.4");
             RefreshLocal();
             try { await _unreal.ForceCloseAsync(cancel); }
             catch (Win32Exception ex)
             {
-                SetStatus("Could not check whether OpenSCCT (UE5 rewrite) is running: " + ex.Message, Theme.Warning, canForceClose: true);
+                SetStatus("Could not check whether OpenSCCT Unreal 5.8.4 is running: " + ex.Message, Theme.Warning, canForceClose: true);
                 return;
             }
             finally { _operationCanCancel = true; }
@@ -298,20 +298,20 @@ internal sealed partial class MainForm
         if (_work is not null) return;
         if (_unreal.IsRunning)
         {
-            SetStatus("Close OpenSCCT (UE5 rewrite) before uninstalling it.", Theme.Warning);
+            SetStatus("Close OpenSCCT Unreal 5.8.4 before uninstalling it.", Theme.Warning);
             return;
         }
         if (MessageBox.Show(this,
-            "Uninstall OpenSCCT (UE5 rewrite)?\n\nThe OpenSCCT game, its maps, the editor and your game settings are kept.",
-            "Uninstall OpenSCCT (UE5 rewrite)", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.OK)
+            "Uninstall OpenSCCT Unreal 5.8.4?\n\nThe OpenSCCT game, its maps, the editor and your game settings are kept.",
+            "Uninstall OpenSCCT Unreal 5.8.4", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.OK)
             return;
         bool removeMapPacks = MessageBox.Show(this,
-            "Also remove the map packs OpenSCCT (UE5 rewrite) downloaded?\n\nIf you keep them, they are used again when you reinstall.",
-            "Uninstall OpenSCCT (UE5 rewrite)", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+            "Also remove the map packs OpenSCCT Unreal 5.8.4 downloaded?\n\nIf you keep them, they are used again when you reinstall.",
+            "Uninstall OpenSCCT Unreal 5.8.4", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
 
         await RunAsync(async cancel =>
         {
-            SetOperation("Uninstalling OpenSCCT (UE5 rewrite)");
+            SetOperation("Uninstalling OpenSCCT Unreal 5.8.4");
             var progress = new Progress<UnrealProgress>(p =>
             {
                 if (IsDisposed || _work is null) return;
@@ -322,25 +322,25 @@ internal sealed partial class MainForm
             UnrealUninstallResult result = await _unreal.UninstallAsync(removeMapPacks, progress, cancel);
             _unrealSetupFailed = false;
             string status = result.Failures.Count > 0
-                ? "OpenSCCT (UE5 rewrite) was removed, but some files are in use and were kept: " + result.Failures[0]
-                : removeMapPacks ? "OpenSCCT (UE5 rewrite) and its map packs were uninstalled. The OpenSCCT game was kept."
-                : "OpenSCCT (UE5 rewrite) was uninstalled. Its map packs and the OpenSCCT game were kept.";
+                ? "OpenSCCT Unreal 5.8.4 was removed, but some files are in use and were kept: " + result.Failures[0]
+                : removeMapPacks ? "OpenSCCT Unreal 5.8.4 and its map packs were uninstalled. The OpenSCCT game was kept."
+                : "OpenSCCT Unreal 5.8.4 was uninstalled. Its map packs and the OpenSCCT game were kept.";
             SetStatus(status, result.Failures.Count > 0 ? Theme.Warning : Theme.Accent);
         });
     }
 
-    /// <summary>Activates an installed update once OpenSCCT (UE5 rewrite) has closed.</summary>
+    /// <summary>Activates an installed update once OpenSCCT Unreal 5.8.4 has closed.</summary>
     private void FinishUnrealSwitch()
     {
         try
         {
             if (_unreal.Pending is null) return;
             if (_unreal.FinishPendingSwitch())
-                _unrealStatus = new($"Now on OpenSCCT (UE5 rewrite) {_unreal.Installed()?.Version}.", StatusKind.Success);
+                _unrealStatus = new($"Now on OpenSCCT Unreal 5.8.4 {_unreal.Installed()?.Version}.", StatusKind.Success);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _unrealStatus = new("Could not switch OpenSCCT (UE5 rewrite) versions yet: " + ex.Message, StatusKind.Warning);
+            _unrealStatus = new("Could not switch OpenSCCT Unreal 5.8.4 versions yet: " + ex.Message, StatusKind.Warning);
         }
     }
 
@@ -350,10 +350,10 @@ internal sealed partial class MainForm
         FinishUnrealSwitch();
         if (_unreal.VcRuntimeMissing() && _unreal.VcRuntimeInstaller() is { } installer)
         {
-            if (MessageBox.Show(this, "OpenSCCT (UE5 rewrite) needs the Microsoft Visual C++ runtime. Install it now?",
-                "OpenSCCT (UE5 rewrite)", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            if (MessageBox.Show(this, "OpenSCCT Unreal 5.8.4 needs the Microsoft Visual C++ runtime. Install it now?",
+                "OpenSCCT Unreal 5.8.4", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
             {
-                SetStatus("OpenSCCT (UE5 rewrite) needs the Microsoft Visual C++ runtime to start.", Theme.Warning);
+                SetStatus("OpenSCCT Unreal 5.8.4 needs the Microsoft Visual C++ runtime to start.", Theme.Warning);
                 return;
             }
             bool installed = false;
@@ -380,13 +380,13 @@ internal sealed partial class MainForm
         try
         {
             using Process? game = Process.Start(_unreal.StartInfo());
-            if (game is null) throw new IOException("OpenSCCT (UE5 rewrite) did not start.");
-            SetStatus("Started OpenSCCT (UE5 rewrite).", Theme.Accent);
+            if (game is null) throw new IOException("OpenSCCT Unreal 5.8.4 did not start.");
+            SetStatus("Started OpenSCCT Unreal 5.8.4.", Theme.Accent);
             WindowState = FormWindowState.Minimized;
         }
         catch (Exception ex) when (ex is IOException or Win32Exception or InvalidOperationException)
         {
-            SetStatus("Could not start OpenSCCT (UE5 rewrite): " + ex.Message, Theme.Error);
+            SetStatus("Could not start OpenSCCT Unreal 5.8.4: " + ex.Message, Theme.Error);
         }
     }
 }

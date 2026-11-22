@@ -253,7 +253,7 @@ internal static class Program
             SemVersion unrealLatest = scenario.Name is "unreal-update" or "unreal-pending" or "unreal-busy" ? UnrealLatestVersion : UnrealVersion;
             var unrealRelease = new ReleaseInfo
             {
-                TagName = "v" + unrealLatest, Name = "OpenSCCT (UE5 rewrite) " + unrealLatest,
+                TagName = "v" + unrealLatest, Name = "OpenSCCT Unreal 5.8.4 " + unrealLatest,
                 PublishedAt = release.PublishedAt, Body = release.Body,
                 HtmlUrl = unreal.ReleasesPage + "/tag/v" + unrealLatest,
             };
@@ -297,8 +297,8 @@ internal static class Program
                 if (scenario.Name == "editor-busy-game") Call(form, "SelectProduct", false);
                 break;
             case "unreal-busy":
-                Call(form, "SetOperation", "Installing OpenSCCT (UE5 rewrite)");
-                SetStatus(form, "Downloading OpenSCCT (UE5 rewrite) 0.2.0...", Color.FromArgb(184, 161, 143));
+                Call(form, "SetOperation", "Installing OpenSCCT Unreal 5.8.4");
+                SetStatus(form, "Downloading OpenSCCT Unreal 5.8.4 0.2.0...", Color.FromArgb(184, 161, 143));
                 Field<Control>(form, "_progress").Visible = true;
                 Field<Control>(form, "_progress").GetType().GetProperty("Fraction")!.SetValue(Field<Control>(form, "_progress"), 0.42);
                 Field<Label>(form, "_progressText").Text = "512.0 MB of 1210.0 MB  24.0 MB/s";
@@ -364,7 +364,7 @@ internal static class Program
         else Check(!forceClose.Visible, label + " force close is hidden outside blocked removal");
         Check(Field<Label>(form, "_heading").Text.Length > 0, label + " status heading is populated");
         if (scenario.Unreal)
-            Check(Field<Label>(form, "_installedInfo").Text.Contains(scenario.UnrealInstalled ? "OpenSCCT (UE5 rewrite) " + UnrealVersion : "not installed", StringComparison.Ordinal),
+            Check(Field<Label>(form, "_installedInfo").Text.Contains(scenario.UnrealInstalled ? "OpenSCCT Unreal 5.8.4 " + UnrealVersion : "not installed", StringComparison.Ordinal),
                 label + " Unreal installed version is shown");
         else if (scenario.Game && scenario.Name != "editor-recovery")
             Check(Field<Label>(form, "_installedInfo").Text.Contains(scenario.Editor && scenario.Name != "editor-busy-game"
@@ -392,13 +392,13 @@ internal static class Program
             Check(Field<Button>(form, "_website").Text == "Unreal releases", label + " website action opens Unreal releases");
             string expected = scenario.Name switch
             {
-                "unreal-absent" => "Set up OpenSCCT (UE5 rewrite)",
+                "unreal-absent" => "Set up OpenSCCT Unreal 5.8.4",
                 "unreal-prerequisite" => "Steam files needed",
                 "unreal-update" => "Unreal update available",
                 "unreal-ready" => "Ready to play",
                 "unreal-steam-update" => "Steam content update",
                 "unreal-pending" => "Update ready",
-                "unreal-busy" => "Installing OpenSCCT (UE5 rewrite)",
+                "unreal-busy" => "Installing OpenSCCT Unreal 5.8.4",
                 _ => "Not released yet",
             };
             Check(Field<Label>(form, "_heading").Text == expected, label + " Unreal heading is " + expected);
@@ -478,7 +478,7 @@ internal static class Program
                 Check(Selected(form) == "Game" && OperationProduct(form) == owner, label + " Join selects Game without changing " + owner + " operation owner");
                 Check(Field<string>(form, "_pendingWebJoin") == "smoke-session" && !work.IsCancellationRequested, label + " Join queues without cancelling " + owner + " operation");
                 if (scenario.Unreal)
-                    Check(Field<Label>(form, "_heading").Text == "Unreal · Installing OpenSCCT (UE5 rewrite)", label + " Unreal operation owner survives tab changes");
+                    Check(Field<Label>(form, "_heading").Text == "Unreal · Installing OpenSCCT Unreal 5.8.4", label + " Unreal operation owner survives tab changes");
             }
             if (scenario.Name != "editor-applying")
             {
@@ -836,7 +836,7 @@ internal static class Program
                 "Clipped artwork redraw matches the full banner pixel for pixel");
             Save(form, output, "library-game-games");
             ComboBox editions = Field<ComboBox>(form, "_compactPicker");
-            Check(editions.Items.Cast<string>().SequenceEqual(new[] { "Game versions  /  OpenSCCT", "Game versions  /  OpenSCCT (UE5 rewrite)", "Tools  /  OpenSCCT Editor" }),
+            Check(editions.Items.Cast<string>().SequenceEqual(new[] { "Game versions  /  OpenSCCT", "Game versions  /  OpenSCCT Unreal 5.8.4", "Tools  /  OpenSCCT Editor" }),
                 "The library groups both game versions and the editor.");
             foreach (string edition in new[] { "Game", "Unreal" })
             {
@@ -1017,7 +1017,7 @@ internal static class Program
                 && Field<UpdateCheck?>(form, "_lastCheck") is null, "Unreal startup ignores the other products' enabled check preferences");
             Check(Field<Label>(form, "_heading").Text == "Ready to play" && Field<Button>(form, "_main").Text == "Play",
                 "Installed Unreal build is ready to play before any check");
-            Check(Field<Label>(form, "_installedInfo").Text == "OpenSCCT (UE5 rewrite) " + UnrealVersion + " · OpenSCCT " + InstalledVersion,
+            Check(Field<Label>(form, "_installedInfo").Text == "OpenSCCT Unreal 5.8.4 " + UnrealVersion + " · OpenSCCT " + InstalledVersion,
                 "Unreal version line names the OpenSCCT version it was built from");
             Call(form, "SelectProduct", Product("Unreal"));
             Check(_networkAttempts == attempts, "Reselecting the Unreal tab with checks off stays offline");

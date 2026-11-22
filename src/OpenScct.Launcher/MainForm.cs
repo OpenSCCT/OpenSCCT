@@ -641,7 +641,7 @@ internal sealed partial class MainForm : Form
             Text = _selected switch
             {
                 Product.Editor => "OpenSCCT Editor — What’s new",
-                Product.Unreal => "OpenSCCT (UE5 rewrite) — What’s new",
+                Product.Unreal => "OpenSCCT Unreal 5.8.4 — What’s new",
                 _ => _notesTitle,
             },
             Icon = Icon,
@@ -675,7 +675,7 @@ internal sealed partial class MainForm : Form
         string body = _selected switch
         {
             Product.Editor => SelectedRelease?.Body ?? "No editor release notes cached.",
-            Product.Unreal => SelectedRelease?.Body ?? "No OpenSCCT (UE5 rewrite) release notes cached.",
+            Product.Unreal => SelectedRelease?.Body ?? "No OpenSCCT Unreal 5.8.4 release notes cached.",
             _ => _notesText,
         };
         notes.Rtf = ReleaseNotesRtf.Convert(body, Rgb(Palette.Text), Rgb(Palette.Accent), Rgb(Palette.Muted), Theme.Body.SizeInPoints);
@@ -1114,7 +1114,7 @@ internal sealed partial class MainForm : Form
     {
         if (_work is not null || !VisibleStatus.CanForceClose) return;
         if (MessageBox.Show(this,
-            "Force close all running OpenSCCT games (OpenSCCT (UE5 rewrite) included), the installed editor and its command-line tools, then retry removing the game and shared files?\n\nUnsaved work will be lost.",
+            "Force close all running OpenSCCT games (OpenSCCT Unreal 5.8.4 included), the installed editor and its command-line tools, then retry removing the game and shared files?\n\nUnsaved work will be lost.",
             "Force close OpenSCCT", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.OK)
             return;
 
@@ -1138,7 +1138,7 @@ internal sealed partial class MainForm : Form
     }
 
     /// <summary>
-    /// Deletes what the launcher installed once the game and editor release their files. The OpenSCCT (UE5 rewrite)
+    /// Deletes what the launcher installed once the game and editor release their files. The OpenSCCT Unreal 5.8.4
     /// install and its map packs are kept (they have their own uninstall on the Unreal tab).
     /// </summary>
     private void RemoveGameFiles(bool forceCloseAttempted = false)
@@ -1150,7 +1150,7 @@ internal sealed partial class MainForm : Form
                 ? "Wait for the editor update to finish before removing game and shared files."
                 : forceCloseAttempted
                     ? "Some OpenSCCT processes are still running. Close them before removing game and shared files."
-                    : "Close OpenSCCT, OpenSCCT (UE5 rewrite), the editor and its command-line tools before removing game and shared files.";
+                    : "Close OpenSCCT, OpenSCCT Unreal 5.8.4, the editor and its command-line tools before removing game and shared files.";
             SetStatus(warning, Theme.Warning, canForceClose: true);
             return;
         }
