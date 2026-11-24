@@ -403,6 +403,8 @@ internal static class Program
             };
             Check(Field<Label>(form, "_heading").Text == expected, label + " Unreal heading is " + expected);
             if (scenario.Name == "unreal-busy")
+                Check(Field<Button>(form, "_unrealTab").AccessibleDescription == "Working...", label + " Unreal tab badge shows the running operation");
+            if (scenario.Name == "unreal-busy")
                 Check(Field<Control>(form, "_progress").Visible && Field<Label>(form, "_progressText").Visible, label + " Unreal transfer progress is visible");
             else
                 Check(Field<Label>(form, "_launchDetail").Visible && Field<Label>(form, "_launchDetail").Text.Length > 0, label + " Unreal detail explains the state");
@@ -412,11 +414,13 @@ internal static class Program
             Check(Field<Label>(form, "_heading").Text == (scenario.Name == "building" ? "Building Steam game files" : "Downloading OpenSCCT"), label + " operation phase is shown");
             Check(Field<Control>(form, "_progress").Visible && Field<Label>(form, "_progressText").Visible, label + " progress and transfer details are visible");
             Check(!Field<Button>(form, "_playCurrent").Visible, label + " update deferral stays hidden while busy");
+            Check(Field<Button>(form, "_gameTab").AccessibleDescription == "Working...", label + " game tab badge shows the running operation");
         }
         if (scenario.Name is "editor-busy" or "editor-busy-game")
         {
             Check(Field<Label>(form, "_heading").Text == (scenario.Name == "editor-busy" ? "Downloading editor" : "Editor · Downloading editor"), label + " operation owner survives tab changes");
             Check(Field<Control>(form, "_progress").Visible && Field<Label>(form, "_progressText").Visible, label + " editor transfer progress remains visible");
+            Check(Field<Button>(form, "_editorTab").AccessibleDescription == "Working...", label + " editor tab badge shows the running operation");
         }
         Control wordmark = Walk(host).Single(c => c.GetType().Name == "Wordmark");
         using (Graphics graphics = host.CreateGraphics())

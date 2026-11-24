@@ -329,14 +329,24 @@ internal sealed partial class MainForm
     {
         var unreal = _unreal.Installed();
         bool unrealReady = UnrealService.SupportsSteamContent(unreal?.Version) && _unreal.PrerequisiteProblem() is null;
-        _unrealTab.SetStatus(unreal is null ? "Not installed" : unrealReady ? "Ready to play" : "Setup needed", unrealReady);
+        SetLibraryBadge(_unrealTab, Product.Unreal, unreal is null ? "Not installed" : unrealReady ? "Ready to play" : "Setup needed", unrealReady);
         var game = _store.Current();
         bool gameReady = Content.GodotSteamContent.SupportsClient(game) && _steamContentRoot is not null;
-        _gameTab.SetStatus(game is null ? "Not installed" : !Content.GodotSteamContent.SupportsClient(game) ? "Update needed"
+        SetLibraryBadge(_gameTab, Product.Game, game is null ? "Not installed" : !Content.GodotSteamContent.SupportsClient(game) ? "Update needed"
             : gameReady ? "Ready to play" : "Setup needed", gameReady);
         bool hasEditor = _editor.Installed() is not null;
         bool editorReady = hasEditor && _editor.PrerequisiteProblem() is null && !_editor.NeedsRecovery;
-        _editorTab.SetStatus(!hasEditor ? "Not installed" : editorReady ? "Ready to create" : "Setup needed", editorReady);
+        SetLibraryBadge(_editorTab, Product.Editor, !hasEditor ? "Not installed" : editorReady ? "Ready to create" : "Setup needed", editorReady);
+    }
+
+    /// <summary>
+    /// A tab whose operation is running shows that instead of its installed state, which would read as ready (or as not
+    /// installed) while its files change. The main panel names the operation.
+    /// </summary>
+    private void SetLibraryBadge(LibraryEntry tab, Product product, string idleStatus, bool ready)
+    {
+        if (_work is not null && _operationProduct == product) tab.SetStatus("Working...", false);
+        else tab.SetStatus(idleStatus, ready);
     }
 
     private Control BuildEditionSettings()

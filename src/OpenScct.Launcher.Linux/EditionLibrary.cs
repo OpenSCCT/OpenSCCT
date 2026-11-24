@@ -204,7 +204,8 @@ internal sealed partial class MainWindow
             throw new InvalidOperationException($"The {edition} {section} page did not open.");
     }
 
-    private string GodotStatus() => _model.ClientUpdateRequired ? "Update Godot"
+    private string GodotStatus() => _model.Busy ? "Working..."
+        : _model.ClientUpdateRequired ? "Update Godot"
         : _model.Playable ? "Ready to play"
         : _model.SteamSource is null ? "Steam folder needed"
         : _model.Store.Current() is null ? "Ready to install" : "Build Steam content";
