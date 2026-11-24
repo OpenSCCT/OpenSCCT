@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -81,15 +82,44 @@ internal sealed partial class MainForm
         SetOperation("Building Steam game files");
         SetStatus("Reading the Steam installation.", Theme.Muted);
         _progressText.Visible = true;
+        // The characters step alone runs for minutes after every other unit is done. Show how long the running unit has
+        // been going, ticking each second, so the last unit does not look frozen.
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        var unitStarted = new Dictionary<string, TimeSpan>(StringComparer.Ordinal);
+        ContentProgress? last = null;
+        bool finishing = false;
+        void Show()
+        {
+            if (IsDisposed || _work is null || cancel.IsCancellationRequested || last is not { } p) return;
+            string unit = p.Running.FirstOrDefault() ?? p.Line;
+            string clock = Clock(unitStarted.TryGetValue(unit, out var since) ? started.Elapsed - since : started.Elapsed);
+            string more = p.Running.Count > 1 ? $" and {p.Running.Count - 1} more" : string.Empty;
+            _progressText.Text = p.Total > 0 ? $"{p.Done} of {p.Total}  ·  {unit}{more}  ·  {clock}" : $"{unit}  ·  {clock}";
+            bool lastUnit = p.Total > 0 && p.Done == p.Total - 1 && p.Running.Count == 1;
+            if (lastUnit != finishing)
+            {
+                finishing = lastUnit;
+                SetStatus(lastUnit ? $"Finishing {unit}. This last part can take several minutes." : "Converting the Steam game files.", Theme.Muted);
+            }
+        }
         var progress = new Progress<ContentProgress>(p =>
         {
             if (IsDisposed || _work is null || cancel.IsCancellationRequested) return;
+            if (last is null) SetStatus("Converting the Steam game files.", Theme.Muted);
+            foreach (string name in p.Running) unitStarted.TryAdd(name, started.Elapsed);
+            foreach (string name in unitStarted.Keys.Except(p.Running).ToList()) unitStarted.Remove(name);
+            last = p;
             _progress.Visible = p.Total > 0;
             _progress.Fraction = p.Total > 0 ? (double)p.Done / p.Total : 0;
-            string unit = p.Running.FirstOrDefault() ?? p.Line;
-            _progressText.Text = p.Total > 0 ? $"{p.Done} of {p.Total}  ·  {unit}" : unit;
+            Show();
         });
+        using var tick = new System.Windows.Forms.Timer { Interval = 1000 };
+        tick.Tick += (_, _) => Show();
+        tick.Start();
         await _steamContent.BuildAsync(_layout.VersionDir(version.ToString()), source, progress, cancel);
+        tick.Stop();
         SetStatus("Steam game files are ready.", Theme.Accent);
     }
+
+    private static string Clock(TimeSpan t) => t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
 }
