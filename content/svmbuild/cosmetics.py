@@ -1675,12 +1675,23 @@ def _available_memory() -> int | None:
         return None
 
 
-def build_all(chars_dir: Path) -> dict:
-    """Writes every target's camos next to its retail texture (a texture the install lacks is skipped) and a swatch per
-    pattern under chars/thumbs. The work is spread over worker processes."""
+def paint_pool():
+    """A process pool for camo painting (this module's, the sidearms' and the rifles' finishes): one worker per core
+    up to 12, fewer when free memory is short. A 2048 camo holds about 1.5 GB at its peak; leave room for whatever
+    else is running (the maps' workers)."""
     import concurrent.futures as cf  # noqa: PLC0415
     import multiprocessing as mp  # noqa: PLC0415
 
+    workers = max(1, min(os.cpu_count() or 1, 12))
+    free = _available_memory()
+    if free is not None:
+        workers = max(1, min(workers, int(free * 0.8 // _WORKER_BYTES)))
+    return cf.ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn"))
+
+
+def build_all(chars_dir: Path) -> dict:
+    """Writes every target's camos next to its retail texture (a texture the install lacks is skipped) and a swatch per
+    pattern under chars/thumbs. The work is spread over worker processes."""
     from PIL import Image  # noqa: PLC0415
 
     from . import gunskin  # noqa: PLC0415
@@ -1720,12 +1731,7 @@ def build_all(chars_dir: Path) -> dict:
     spy_mesh = chars_dir / "SPerso" / "ATT_01.glb"
     thumbs = [(p, str(thumbs_dir / f"cosmetic_{p}.png"), str(spy_mesh) if PATTERNS[p][0] == "skeleton" else None)
               for p in PATTERNS if PATTERNS[p][0] != "skeleton" or spy_mesh.is_file()]
-    workers = max(1, min(os.cpu_count() or 1, 12))
-    free = _available_memory()
-    if free is not None:
-        # A 2048 camo holds about 1.5 GB at its peak; leave room for whatever else is running (the maps' workers).
-        workers = max(1, min(workers, int(free * 0.8 // _WORKER_BYTES)))
-    with cf.ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn")) as pool:
+    with paint_pool() as pool:
         # Queued together, so the swatches fill the workers the last camos leave idle.
         camo_futures = [pool.submit(_paint_job, j) for j in jobs]
         thumb_futures = [pool.submit(_thumb_job, t) for t in thumbs]

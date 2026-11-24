@@ -14,7 +14,7 @@ def source_files():
 
 
 def install_models(chars_dir: Path):
-    from .cosmetics import _paint_job
+    from .cosmetics import _paint_job, paint_pool
     from .fitted import SurfaceMesh, ARMS
     target = chars_dir / 'OpenScctSidearms'
     shutil.copytree(SOURCE, target, dirs_exist_ok=True)
@@ -23,9 +23,11 @@ def install_models(chars_dir: Path):
     for image in (retail/"textures").glob("*.png"):
         if image.name.startswith("cosmetic_") and "1DEF_01" not in image.name:continue
         shutil.copy2(image,target/"textures"/image.name)
-    finish_count = 0
+    # Worker processes assemble the first-person models and paint the finishes: painting reads the world model
+    # (<pistol>.glb) and the textures, assembling writes only <pistol>_first.glb.
+    # A texture two pistols share is painted once, fitted to the later pistol (as the serial loop overwrote it).
+    jobs, finish_count = {}, 0
     for pistol in IDS:
-        assemble(chars_dir,pistol)
         # The world weapon is the fitting reference. First-person assemblies also
         # contain hands: their independently selected suit finish must never enter
         # the weapon loop. Only bake textures actually used by weapon primitives.
@@ -36,23 +38,27 @@ def install_models(chars_dir: Path):
         for stem in sorted(mesh.tris):
             image = target / 'textures' / (stem + '.png')
             for finish in FINISHES:
-                _paint_job((str(image), str(image.with_name(f'cosmetic_{finish}_{image.name}')),
-                            finish, image.stem, (1024, 1024), str(mesh_path)))
+                output = str(image.with_name(f'cosmetic_{finish}_{image.name}'))
+                jobs.pop(output, None)
+                jobs[output] = (str(image), output, finish, image.stem, (1024, 1024), str(mesh_path))
                 finish_count += 1
-    arm_finishes = install_arm_finishes(chars_dir)
-    return {'models': 2 * len(IDS), 'finishes': finish_count, 'icons': len(IDS), 'arm_finishes': arm_finishes}
+    arm_jobs = arm_finish_jobs(chars_dir)
+    with paint_pool() as pool:
+        # The models, then the 2K sleeves, so the pool ends evenly.
+        futures = [pool.submit(assemble, chars_dir, pistol) for pistol in IDS]
+        futures += [pool.submit(_paint_job, job) for job in arm_jobs + list(jobs.values())]
+        for future in futures:
+            future.result()
+    return {'models': 2 * len(IDS), 'finishes': finish_count, 'icons': len(IDS), 'arm_finishes': len(arm_jobs)}
 
 
-def install_arm_finishes(chars_dir: Path):
+def arm_finish_jobs(chars_dir: Path):
     """The new 2K sleeves retain the merc's existing independently selected body finishes."""
-    from concurrent.futures import ThreadPoolExecutor
-    from .cosmetics import _MERC_SUITS, _paint_job
+    from .cosmetics import _MERC_SUITS
     source = chars_dir / 'OpenScctSidearms/textures/OpenScctSidearms_arms_arms_baseColor.png'
-    jobs = [(str(source), str(source.with_name(f'cosmetic_{pattern}_{source.name}')), pattern,
+    return [(str(source), str(source.with_name(f'cosmetic_{pattern}_{source.name}')), pattern,
              source.stem, (2048, 2048), str(chars_dir / 'OpenScctSidearms/arms_base.glb'))
             for pattern in sorted(set(_MERC_SUITS))]
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        return len(list(pool.map(_paint_job, jobs)))
 
 
 def install_audio(audio_dir: Path):

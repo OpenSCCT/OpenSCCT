@@ -1,4 +1,5 @@
 """Fit the existing assault-rifle finishes to the painted panels of the four licensed rifles."""
+from functools import lru_cache
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -80,23 +81,52 @@ def _atomic_png(pixels, output):
         temporary.unlink(missing_ok=True)
 
 
+def finish_jobs(package, source, patterns=FINISHES):
+    """One job per panel and pattern, a panel's patterns consecutive (see install)."""
+    textures = Path(package) / 'textures'
+    textures.mkdir(parents=True, exist_ok=True)
+    return [(str(source), str(textures), weapon, stem, pattern)
+            for weapon, panels in PANELS.items() for stem in panels for pattern in patterns]
+
+
+@lru_cache(maxsize=1)
+def _fitting(source, weapon, stem):
+    source = Path(source)
+    with Image.open(source / 'textures' / (stem + '.png')) as native:
+        base = np.asarray(native.convert('RGBA'))
+    h, w = base.shape[:2]
+    scale = min(1., 1024 / max(w, h))
+    return base, projection(SurfaceMesh(source / (weapon + '.glb')), stem, PANELS[weapon][stem],
+                            round(w * scale), round(h * scale))
+
+
+def finish_job(job):
+    """Paints one panel's pattern: cosmetic_<pattern>_<stem>.png and its .mask.png sheen."""
+    source, textures, weapon, stem, pattern = job
+    base, fitting = _fitting(source, weapon, stem)
+    painted, sheen = panel_colour(base, *fitting, pattern)
+    image = Path(textures) / f'cosmetic_{pattern}_{stem}.png'
+    _atomic_png(painted, image)
+    _atomic_png(sheen, image.with_suffix('.mask.png'))
+
+
 def install(package, source, patterns=FINISHES):
     """Install only generated colour variants. Both first and third person use the same atlas."""
-    textures = package / 'textures'
-    textures.mkdir(parents=True, exist_ok=True)
-    count = 0
-    for weapon, panels in PANELS.items():
-        mesh = SurfaceMesh(source / (weapon + '.glb'))
-        for stem, bounds in panels.items():
-            with Image.open(source / 'textures' / (stem + '.png')) as native:
-                base = np.asarray(native.convert('RGBA'))
-            h, w = base.shape[:2]
-            scale = min(1., 1024 / max(w, h))
-            fitting = projection(mesh, stem, bounds, round(w * scale), round(h * scale))
-            for pattern in patterns:
-                painted, sheen = panel_colour(base, *fitting, pattern)
-                image = textures / f'cosmetic_{pattern}_{stem}.png'
-                _atomic_png(painted, image)
-                _atomic_png(sheen, image.with_suffix('.mask.png'))
-                count += 1
-    return count
+    jobs = finish_jobs(package, source, patterns)
+    for job in jobs:
+        finish_job(job)
+    return len(jobs)
+
+
+def submit(pool, package, source, patterns=FINISHES):
+    """install's jobs on a process pool, a panel's patterns a few at a time so a worker fits each panel it gets once.
+    The futures' results add up to the job count."""
+    jobs = finish_jobs(package, source, patterns)
+    chunk = max(1, len(patterns) // 4)
+    return [pool.submit(_finish_chunk, jobs[i:i + chunk]) for i in range(0, len(jobs), chunk)]
+
+
+def _finish_chunk(jobs):
+    for job in jobs:
+        finish_job(job)
+    return len(jobs)

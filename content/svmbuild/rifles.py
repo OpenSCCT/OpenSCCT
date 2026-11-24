@@ -20,6 +20,17 @@ def contextual_clips(path, reference_path):
     write(path,doc,data)
 
 
+def _author(target, chars_dir, name):
+    """One rifle's first-person clips and handling, and the world sights and icon of the scoped ones."""
+    from .rifle_handling import author_rifle, world_sights
+    from .weapon_icons import render
+    contextual_clips(target/(name+'_first.glb'),chars_dir/'SWeaponFirst/1DEF_01.glb')
+    author_rifle(target/(name+'_first.glb'), name)
+    if name in ('m4a1s', 'famas'):
+        world_sights(target/(name+'.glb'), target/(name+'_first.glb'), name)
+        render(target/(name+'.glb'), target/'textures'/(name+'_icon.png'))
+
+
 def install_models(chars_dir):
     target = chars_dir / 'OpenScctRifles'
     shutil.copytree(SOURCE,target,dirs_exist_ok=True,ignore=shutil.ignore_patterns('audio'))
@@ -27,21 +38,23 @@ def install_models(chars_dir):
     for image in (chars_dir/'OpenScctSidearms/textures').glob('cosmetic_*OpenScctSidearms_arms_arms_baseColor.png'):
         prefix,base=image.name.split('OpenScctSidearms_',1)
         shutil.copy2(image,target/'textures'/(prefix+'shared_OpenScctSidearms_'+base))
-    from .rifle_handling import author_rifle, world_sights, split_m4_backup_sight
-    from .weapon_icons import render
-    for name in IDS:
-        contextual_clips(target/(name+'_first.glb'),chars_dir/'SWeaponFirst/1DEF_01.glb')
-        author_rifle(target/(name+'_first.glb'), name)
-        if name in ('m4a1s', 'famas'):
-            world_sights(target/(name+'.glb'), target/(name+'_first.glb'), name)
-            render(target/(name+'.glb'), target/'textures'/(name+'_icon.png'))
-    split_m4_backup_sight(SOURCE/'m4a1s.glb', target)
+    from .rifle_handling import split_m4_backup_sight
+    from .cosmetics import paint_pool
+    from .rifle_finishes import submit as submit_finishes
+    # Worker processes author each rifle (its own <name>.glb, <name>_first.glb and icon) and paint the finishes from
+    # SOURCE's models and textures (they write only cosmetic_*.png).
+    with paint_pool() as pool:
+        authored = [pool.submit(_author, target, chars_dir, name) for name in IDS]
+        finishes = submit_finishes(pool, target, SOURCE)
+        for future in authored:
+            future.result()
+        split_m4_backup_sight(SOURCE/'m4a1s.glb', target)
+        finish_count = sum(future.result() for future in finishes)
     weapons = json.loads((target / 'models.json').read_text(encoding='utf-8'))
-    from .rifle_finishes import install as install_finishes
     return {
         'models': sum((target / (name + suffix + '.glb')).is_file() for name in weapons for suffix in ('', '_first')),
         'icons': sum((target / 'textures' / (name + '_icon.png')).is_file() for name in weapons),
-        'finishes': install_finishes(target, SOURCE),
+        'finishes': finish_count,
     }
 
 
