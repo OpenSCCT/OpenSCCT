@@ -52,6 +52,31 @@ internal sealed partial class MainForm
         info.RedirectStandardError = true;
         using var setup = Process.Start(info) ?? throw new IOException("The Unreal setup tool could not start.");
         var errors = setup.StandardError.ReadToEndAsync();
+        // The converter reports only completed jobs, and its last job runs for minutes after the others. Tick a clock for
+        // the time since the last report each second, so the build never looks frozen.
+        var started = Stopwatch.StartNew();
+        TimeSpan since = TimeSpan.Zero;
+        int done = 0, total = 0;
+        string lastJob = string.Empty;
+        bool finishing = false;
+        void Show()
+        {
+            if (IsDisposed || _work is null || cancel.IsCancellationRequested) return;
+            string clock = Clock(started.Elapsed - since);
+            _progressText.Visible = true;
+            _progressText.Text = total > 0 ? $"{done} of {total} jobs  ·  last finished: {lastJob}  ·  next running for {clock}"
+                : $"Reading your Steam installation  ·  {clock}";
+            bool lastUnit = total > 0 && done == total - 1;
+            if (lastUnit != finishing)
+            {
+                finishing = lastUnit;
+                SetStatus(lastUnit ? "Finishing the last job. This part can take several minutes." : "Converting the Steam game files.", Theme.Muted);
+            }
+        }
+        using var tick = new System.Windows.Forms.Timer { Interval = 1000 };
+        tick.Tick += (_, _) => Show();
+        tick.Start();
+        Show();
         try
         {
             while (await setup.StandardOutput.ReadLineAsync(cancel) is { } line)
@@ -60,12 +85,12 @@ internal sealed partial class MainForm
                 var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (fields.Length < 2) continue;
                 var counts = fields[0].Split('/');
-                if (counts.Length != 2 || !int.TryParse(counts[0], out int done) ||
-                    !int.TryParse(counts[1], out int total) || total <= 0 || done < 0 || done > total) continue;
+                if (counts.Length != 2 || !int.TryParse(counts[0], out int reportedDone) ||
+                    !int.TryParse(counts[1], out int reportedTotal) || reportedTotal <= 0 || reportedDone < 0 || reportedDone > reportedTotal) continue;
+                (done, total, lastJob, since) = (reportedDone, reportedTotal, fields[1], started.Elapsed);
                 _progress.Visible = true;
                 _progress.Fraction = (double)done / total;
-                _progressText.Visible = true;
-                _progressText.Text = $"{done} of {total} jobs  ·  {fields[1]}";
+                Show();
             }
             await setup.WaitForExitAsync(cancel);
         }
@@ -144,7 +169,7 @@ internal sealed partial class MainForm
             : waiting && !update ? "Waiting for game to close"
             : installed is null ? "Install Unreal"
             : _unrealSetupFailed ? "Retry update"
-            : update ? "Update Unreal"
+            : update ? "Update"
             : setupProblem is not null ? "Check for updates"
             : prerequisite is not null ? "Build game files"
             : "Play";
