@@ -228,6 +228,8 @@ internal sealed partial class MainForm : Form
         };
         _progress.Name = "DownloadProgress";
         _progress.Visible = false;
+        // The library tab of the running operation shows the same progress as a percentage.
+        _progress.Changed += (_, _) => RefreshOperationTab();
         _progress.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _progress.Margin = new Padding(0, 14, 0, 0);
         Theme.Wrapping(_progressText);
@@ -509,6 +511,7 @@ internal sealed partial class MainForm : Form
     {
         _operationTitle = title;
         if (_work is not null) _heading.Text = VisibleOperationTitle;
+        RefreshOperationTab();
     }
 
     private bool GodotUpdateAvailable(SemVersion? current) => current is not null && _store.Pending() is null

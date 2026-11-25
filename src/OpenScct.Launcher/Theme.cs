@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -164,7 +165,7 @@ internal static class Theme
     public static Button Button(string text, bool primary = false)
     {
         // Sized to its text (at any display scaling), never narrower than its minimum.
-        var button = new Button
+        var button = new RoundedButton
         {
             Text = text,
             AutoSize = true,
@@ -348,11 +349,127 @@ internal static class Theme
     };
 }
 
+/// <summary>
+/// A flat button with rounded corners. It paints the colours <see cref="Theme"/> gives a flat button (back colour,
+/// hover and pressed colours, border) itself, because a flat system button only draws square corners.
+/// </summary>
+internal sealed class RoundedButton : Button
+{
+    private bool _hover;
+    private bool _pressed;
+
+    public RoundedButton()
+    {
+        SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer
+                 | ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
+    }
+
+    protected override void OnMouseEnter(EventArgs e) { _hover = true; Invalidate(); base.OnMouseEnter(e); }
+    protected override void OnMouseLeave(EventArgs e) { _hover = false; _pressed = false; Invalidate(); base.OnMouseLeave(e); }
+    protected override void OnMouseDown(MouseEventArgs e) { if (e.Button == MouseButtons.Left) { _pressed = true; Invalidate(); } base.OnMouseDown(e); }
+    protected override void OnMouseUp(MouseEventArgs e) { _pressed = false; Invalidate(); base.OnMouseUp(e); }
+    protected override void OnEnabledChanged(EventArgs e) { _hover = _pressed = false; Invalidate(); base.OnEnabledChanged(e); }
+
+    /// <summary>The colour behind the button: the first ancestor with a solid back colour.</summary>
+    private Color Surround()
+    {
+        for (Control? c = Parent; c is not null; c = c.Parent)
+            if (c.BackColor.A == 255) return c.BackColor;
+        return Theme.Background;
+    }
+
+    private static Color Blend(Color a, Color b, float t) => Color.FromArgb(
+        (int)(a.R + (b.R - a.R) * t), (int)(a.G + (b.G - a.G) * t), (int)(a.B + (b.B - a.B) * t));
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        Color surround = Surround();
+        // Draw what is behind the button (a panel colour or banner artwork) into the corners outside the rounded shape;
+        // a flat fill there shows as a square box over artwork.
+        if (Parent is { } parent)
+        {
+            GraphicsState state = g.Save();
+            g.TranslateTransform(-Left, -Top);
+            var behind = new PaintEventArgs(g, new Rectangle(Left, Top, Width, Height));
+            InvokePaintBackground(parent, behind);
+            InvokePaint(parent, behind);
+            g.Restore(state);
+        }
+        else g.Clear(surround);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        Color fill = !Enabled ? Blend(BackColor, surround, .45f)
+            : _pressed && FlatAppearance.MouseDownBackColor.A > 0 ? FlatAppearance.MouseDownBackColor
+            : _hover && FlatAppearance.MouseOverBackColor.A > 0 ? FlatAppearance.MouseOverBackColor
+            : BackColor;
+        // Taller (primary) buttons get softer corners; never more than a pill.
+        int radius = Math.Min(LogicalToDeviceUnits(Height >= LogicalToDeviceUnits(48) ? 12 : 8), Height / 2);
+        var bounds = new RectangleF(.5f, .5f, Width - 1.5f, Height - 1.5f);
+        using (var shape = new GraphicsPath())
+        {
+            shape.AddRoundedRectangle(bounds, new SizeF(radius * 2, radius * 2));
+            if (fill.A > 0)
+            {
+                using var brush = new SolidBrush(fill);
+                g.FillPath(brush, shape);
+            }
+            if (FlatAppearance.BorderSize > 0)
+            {
+                using var pen = new Pen(Enabled ? FlatAppearance.BorderColor : Blend(FlatAppearance.BorderColor, surround, .45f));
+                g.DrawPath(pen, shape);
+            }
+        }
+
+        Color ink = Enabled ? ForeColor : Blend(ForeColor, fill, .55f);
+        var content = new Rectangle(Padding.Left, 0, Math.Max(0, Width - Padding.Horizontal), Height);
+        const TextFormatFlags flags = TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis
+                                      | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding;
+        Size text = TextRenderer.MeasureText(g, Text, Font, Size.Empty, TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+        int gap = Image is null || Text.Length == 0 ? 0 : LogicalToDeviceUnits(6);
+        int imageWidth = Image?.Width ?? 0;
+        int left = content.X + Math.Max(0, (content.Width - imageWidth - gap - text.Width) / 2);
+        if (Image is { } image)
+        {
+            g.DrawImage(image, left, (Height - image.Height) / 2, image.Width, image.Height);
+            left += imageWidth + gap;
+        }
+        TextRenderer.DrawText(g, Text, Font, new Rectangle(left, 0, content.Right - left, Height), ink, flags);
+
+        if (Focused && ShowFocusCues)
+        {
+            using var focus = new Pen(Blend(ink, fill, .4f)) { DashStyle = DashStyle.Dot };
+            using var ring = new GraphicsPath();
+            int inset = LogicalToDeviceUnits(3);
+            ring.AddRoundedRectangle(RectangleF.Inflate(bounds, -inset, -inset), new SizeF(Math.Max(2, radius - inset) * 2, Math.Max(2, radius - inset) * 2));
+            g.DrawPath(focus, ring);
+        }
+    }
+}
+
 /// <summary>A flat green progress bar; the system bar ignores colours under visual styles.</summary>
 internal sealed class GreenProgressBar : Control
 {
     private double _fraction;
     private ThemePalette _palette = ThemePalette.Game;
+
+    /// <summary>Raised when the fraction or visibility changes, so other views can mirror the progress.</summary>
+    public event EventHandler? Changed;
+
+    /// <summary>
+    /// Whether the bar was last asked to show. Unlike <see cref="Control.Visible"/> it stays true while a parent
+    /// panel is hidden, such as when another page is open.
+    /// </summary>
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public bool Showing { get; private set; } = true;
+
+    protected override void SetVisibleCore(bool value)
+    {
+        bool changed = value != Showing;
+        Showing = value;
+        base.SetVisibleCore(value);
+        if (changed) Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public ThemePalette Palette
@@ -374,8 +491,11 @@ internal sealed class GreenProgressBar : Control
         get => _fraction;
         set
         {
-            _fraction = Math.Clamp(value, 0, 1);
+            double fraction = Math.Clamp(value, 0, 1);
+            if (fraction == _fraction) return;
+            _fraction = fraction;
             Invalidate();
+            Changed?.Invoke(this, EventArgs.Empty);
         }
     }
 

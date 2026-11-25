@@ -144,7 +144,7 @@ internal static class Program
             new("editor-launcher-restart", true, true, "Open Editor"),
             new("unreal-absent", true, true, "Install Unreal"),
             new("unreal-prerequisite", false, false, "Build game files"),
-            new("unreal-update", true, true, "Update Unreal"),
+            new("unreal-update", true, true, "Update"),
             new("unreal-steam-update", true, true, "Update Steam files"),
             new("unreal-ready", true, true, "Play"),
             new("unreal-pending", true, true, "Waiting for game to close"),
@@ -403,7 +403,7 @@ internal static class Program
             };
             Check(Field<Label>(form, "_heading").Text == expected, label + " Unreal heading is " + expected);
             if (scenario.Name == "unreal-busy")
-                Check(Field<Button>(form, "_unrealTab").AccessibleDescription == "Working...", label + " Unreal tab badge shows the running operation");
+                Check(Field<Button>(form, "_unrealTab").AccessibleDescription == "Installing 42%", label + " Unreal tab badge shows the running operation's progress");
             if (scenario.Name == "unreal-busy")
                 Check(Field<Control>(form, "_progress").Visible && Field<Label>(form, "_progressText").Visible, label + " Unreal transfer progress is visible");
             else
@@ -414,13 +414,13 @@ internal static class Program
             Check(Field<Label>(form, "_heading").Text == (scenario.Name == "building" ? "Building Steam game files" : "Downloading OpenSCCT"), label + " operation phase is shown");
             Check(Field<Control>(form, "_progress").Visible && Field<Label>(form, "_progressText").Visible, label + " progress and transfer details are visible");
             Check(!Field<Button>(form, "_playCurrent").Visible, label + " update deferral stays hidden while busy");
-            Check(Field<Button>(form, "_gameTab").AccessibleDescription == "Working...", label + " game tab badge shows the running operation");
+            Check(Field<Button>(form, "_gameTab").AccessibleDescription == (scenario.Name == "building" ? "Building 42%" : "Downloading 42%"), label + " game tab badge shows the running operation's progress");
         }
         if (scenario.Name is "editor-busy" or "editor-busy-game")
         {
             Check(Field<Label>(form, "_heading").Text == (scenario.Name == "editor-busy" ? "Downloading editor" : "Editor · Downloading editor"), label + " operation owner survives tab changes");
             Check(Field<Control>(form, "_progress").Visible && Field<Label>(form, "_progressText").Visible, label + " editor transfer progress remains visible");
-            Check(Field<Button>(form, "_editorTab").AccessibleDescription == "Working...", label + " editor tab badge shows the running operation");
+            Check(Field<Button>(form, "_editorTab").AccessibleDescription == "Downloading 42%", label + " editor tab badge shows the running operation's progress");
         }
         Control wordmark = Walk(host).Single(c => c.GetType().Name == "Wordmark");
         using (Graphics graphics = host.CreateGraphics())

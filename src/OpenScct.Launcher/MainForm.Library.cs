@@ -345,8 +345,37 @@ internal sealed partial class MainForm
     /// </summary>
     private void SetLibraryBadge(LibraryEntry tab, Product product, string idleStatus, bool ready)
     {
-        if (_work is not null && _operationProduct == product) tab.SetStatus("Working...", false);
+        if (_work is not null && _operationProduct == product) ShowOperationOnTab(tab);
         else tab.SetStatus(idleStatus, ready);
+    }
+
+    private LibraryEntry? OperationTab => _work is null ? null : _operationProduct switch
+    {
+        Product.Unreal => _unrealTab,
+        Product.Game => _gameTab,
+        Product.Editor => _editorTab,
+        _ => null,
+    };
+
+    /// <summary>
+    /// Mirrors the running operation's progress bar on its library tab: the phase and a whole percentage with a thin
+    /// bar, or "Working..." while the operation has no measurable progress.
+    /// </summary>
+    private void ShowOperationOnTab(LibraryEntry tab)
+    {
+        if (_progress.Showing)
+        {
+            string verb = _operationTitle.Split(' ', 2)[0];
+            if (verb.Length == 0 || verb == "Getting") verb = "Working";
+            int percent = (int)Math.Floor(_progress.Fraction * 100);
+            tab.SetStatus($"{verb} {percent}%", false, _progress.Fraction);
+        }
+        else tab.SetStatus("Working...", false);
+    }
+
+    private void RefreshOperationTab()
+    {
+        if (OperationTab is { } tab) ShowOperationOnTab(tab);
     }
 
     private Control BuildEditionSettings()
@@ -469,11 +498,15 @@ internal sealed class LibraryEntry : Button
     internal Image? Artwork { get; set; }
     private string _detail;
     private bool _ready;
-    public void SetStatus(string status, bool ready)
+    private double? _progress;
+
+    /// <summary>Sets the status line; <paramref name="progress"/> (0 to 1) adds a thin bar under the row.</summary>
+    public void SetStatus(string status, bool ready, double? progress = null)
     {
-        if (_detail == status && _ready == ready) return;
+        if (_detail == status && _ready == ready && _progress == progress) return;
         _detail = status;
         _ready = ready;
+        _progress = progress;
         AccessibleDescription = status;
         Invalidate();
     }
@@ -536,7 +569,25 @@ internal sealed class LibraryEntry : Button
         e.Graphics.FillEllipse(statusBrush, detail.X + 2, detail.Y + (detail.Height - dot) / 2, dot, dot);
         detail.X += dot + LogicalToDeviceUnits(5);
         detail.Width -= dot + LogicalToDeviceUnits(5);
-        TextRenderer.DrawText(e.Graphics, _detail, Theme.Small, detail, Palette.Muted, flags);
+        TextRenderer.DrawText(e.Graphics, _detail, Theme.Small, detail, _progress is null ? Palette.Muted : Palette.Text, flags);
+        if (_progress is double fraction)
+        {
+            // Under the text column, near the bottom edge of the row.
+            int thickness = LogicalToDeviceUnits(3);
+            var track = new RectangleF(x, Height - LogicalToDeviceUnits(9), Width - x - LogicalToDeviceUnits(12), thickness);
+            using var trackShape = new GraphicsPath();
+            trackShape.AddRoundedRectangle(track, new SizeF(thickness, thickness));
+            using var trackBrush = new SolidBrush(Palette.Border);
+            e.Graphics.FillPath(trackBrush, trackShape);
+            float filled = (float)(track.Width * Math.Clamp(fraction, 0, 1));
+            if (filled >= 1)
+            {
+                using var fillShape = new GraphicsPath();
+                fillShape.AddRoundedRectangle(new RectangleF(track.X, track.Y, Math.Max(filled, thickness), thickness), new SizeF(thickness, thickness));
+                using var fillBrush = new SolidBrush(palette);
+                e.Graphics.FillPath(fillBrush, fillShape);
+            }
+        }
         if (Focused && ShowFocusCues) ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(ClientRectangle, -2, -2), Theme.Text, surface);
     }
 }
