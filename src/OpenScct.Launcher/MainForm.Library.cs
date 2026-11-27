@@ -329,7 +329,9 @@ internal sealed partial class MainForm
     {
         var unreal = _unreal.Installed();
         bool unrealReady = UnrealService.SupportsSteamContent(unreal?.Version) && _unreal.PrerequisiteProblem() is null;
-        SetLibraryBadge(_unrealTab, Product.Unreal, unreal is null ? "Not installed" : unrealReady ? "Ready to play" : "Setup needed", unrealReady);
+        bool unrealUpdate = unreal is not null && _unrealCheck?.Latest is { } latest && latest.Version > (_unreal.Pending ?? unreal.Version);
+        SetLibraryBadge(_unrealTab, Product.Unreal, unreal is null ? "Not installed" : unrealUpdate ? "Update available"
+            : unrealReady ? "Ready to play" : "Setup needed", unrealReady);
         var game = _store.Current();
         bool gameReady = Content.GodotSteamContent.SupportsClient(game) && _steamContentRoot is not null;
         SetLibraryBadge(_gameTab, Product.Game, game is null ? "Not installed" : !Content.GodotSteamContent.SupportsClient(game) ? "Update needed"

@@ -409,5 +409,6 @@ internal sealed partial class MainForm
         if (_editor is null || _unreal is null || _mainLayout is null || IsDisposed) return;
         if (_work is null) FinishUnrealSwitch();
         RefreshLocal();
+        PollIfStale();
     }
 }

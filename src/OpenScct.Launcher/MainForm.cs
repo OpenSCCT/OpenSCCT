@@ -99,6 +99,7 @@ internal sealed partial class MainForm : Form
     private readonly Button _launcherButton = Theme.Button("Restart to finish");
     private readonly System.Windows.Forms.Timer _pendingTimer = new() { Interval = 3000 };
     private readonly System.Windows.Forms.Timer _updateTimer = new() { Interval = 10 * 60 * 1000 };
+    private DateTime _lastPoll = DateTime.UtcNow;
     private CancellationTokenSource? _backgroundUpdate;
     private readonly ToolTip _tips = new();
 
@@ -748,6 +749,7 @@ internal sealed partial class MainForm : Form
         if (_work is not null || _backgroundUpdate is not null || _closeAfterWork || _swap is { HasStaged: true }) return;
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         _backgroundUpdate = timeout;
+        _lastPoll = DateTime.UtcNow;
         var previous = _lastCheck;
         try
         {
@@ -760,7 +762,36 @@ internal sealed partial class MainForm : Form
         {
             // Leave the current page and the last successful check in place until the next poll.
         }
+        // The Unreal and Editor feeds were otherwise read once per session, so a release published while the launcher
+        // stayed open only showed after a restart. Re-read them quietly; a failed read keeps the last good check.
+        try
+        {
+            if (_settings.UnrealCheckOnStart || _unrealCheck is not null)
+            {
+                var unreal = await _unreal.CheckAsync(_settings.UnrealIncludePrereleases, timeout.Token);
+                if (!IsDisposed && !Disposing && _work is null && unreal.Feed.Problem is null) _unrealCheck = unreal;
+            }
+            if (_settings.EditorCheckOnStart || _editorCheck is not null)
+            {
+                var editor = await _editor.CheckAsync(_settings.EditorIncludePrereleases, timeout.Token);
+                if (!IsDisposed && !Disposing && _work is null && editor.Feed.Problem is null) _editorCheck = editor;
+            }
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException or IOException or UnauthorizedAccessException)
+        {
+        }
         finally { _backgroundUpdate = null; }
+        if (!IsDisposed && !Disposing && _work is null)
+        {
+            RefreshReleasePreview();
+            RefreshLocal();
+        }
+    }
+
+    /// <summary>Polls when the window comes back to the front and the last poll is a few minutes old.</summary>
+    private void PollIfStale()
+    {
+        if (_webJoinReady && DateTime.UtcNow - _lastPoll > TimeSpan.FromMinutes(2)) _ = PollLauncherUpdateAsync();
     }
 
     private void ShowReleaseCheck(UpdateCheck check)
